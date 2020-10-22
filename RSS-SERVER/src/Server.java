@@ -9,7 +9,7 @@ public class Server {
         private DatagramSocket socket;
 
 
-      public EchoServer(int port) throws SocketException {
+      public Server(int port) throws SocketException {
           socket = new DatagramSocket(port);
 
       }
@@ -23,7 +23,7 @@ public class Server {
           int port = Integer.parseInt(args[0]);
 
           try {
-              EchoServer server = new EchoServer(port);
+              Server server = new Server(port);
               System.out.println("Echo Server listening on port " + port);
               server.service();
 

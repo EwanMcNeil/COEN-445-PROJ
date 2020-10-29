@@ -29,7 +29,7 @@ public class Client {
                         // Create a Scanner object to read input.
                         Scanner console = new Scanner(System.in);
                      String message;
-                        System.out.print("Enter your message ");
+                        System.out.print("Enter a message: ");
                         message = console.nextLine();
 
 

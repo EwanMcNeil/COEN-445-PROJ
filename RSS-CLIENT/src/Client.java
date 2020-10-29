@@ -36,19 +36,16 @@ public class Client {
                         byte[] requestbuffer = message.getBytes();
 
                         //Send message to server
-                        DatagramPacket request = new 
-DatagramPacket(requestbuffer,requestbuffer.length, address, port);
+                        DatagramPacket request = new DatagramPacket(requestbuffer,requestbuffer.length, address, port);
                         socket.send(request);
 
                         //wait for response
                         byte[] buffer = new byte[512];
-                        DatagramPacket response = new DatagramPacket(buffer, 
-buffer.length);
+                        DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                         socket.receive(response); // blocking call
 
                         //format and print response
-                        String serverMessage = new String(buffer, 0, 
-response.getLength());
+                        String serverMessage = new String(buffer, 0, response.getLength());
                         System.out.println(serverMessage);
                         System.out.println();
 

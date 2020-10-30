@@ -84,10 +84,10 @@ public class Server {
               else {
             	  for(int i = 0; i < clientHandlers.size(); i++)
             	  {
-            		  System.out.println("else is called");
-            		  //if(clientHandlers.get(i).getName() == splitMessage[2]) {
+            		
+            		  if(clientHandlers.get(i).getName().equals(splitMessage[2])) {
             			  clientHandlers.get(i).newPacket(requestPacket);
-            		 // }
+            		 }
             	      
             	  
               }

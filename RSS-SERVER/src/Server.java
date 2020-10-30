@@ -4,11 +4,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class Server {
 
       
 	  ArrayList<String> clients;
+	  Vector<ClientHandler> clientHandlers = new <ClientHandler>Vector();
 	  final int port;
 
       public Server(int port) throws SocketException {
@@ -46,6 +48,7 @@ public class Server {
 
       private void service() throws IOException {
     	  DatagramSocket socket = new DatagramSocket(port);
+    	  
           while (true) {
         	  DatagramPacket requestPacket = null;
         	  try 
@@ -69,13 +72,27 @@ public class Server {
               
               if(!(clients.contains(splitMessage[2]))){
             	  clients.add(splitMessage[2]);
-              Thread t = new ClientHandler(socket, requestPacket, count, splitMessage[2]); 
+              ClientHandler t = new ClientHandler(socket, requestPacket, count, splitMessage[2]); 
+              
               
               // Invoking the start() method 
               t.start(); 
+              
+              
+              clientHandlers.add(t);
+              }
+              else {
+            	  for(int i = 0; i < clientHandlers.size(); i++)
+            	  {
+            		  System.out.println("else is called");
+            		  //if(clientHandlers.get(i).getName() == splitMessage[2]) {
+            			  clientHandlers.get(i).newPacket(requestPacket);
+            		 // }
+            	      
+            	  
               }
               
-              } 
+              } }
               catch (Exception e){ 
                   socket.close(); 
                   e.printStackTrace(); 
@@ -115,7 +132,6 @@ class ClientHandler extends Thread
    
  DatagramPacket request;
  final int count;
- String clientName;
  int RQ;
 
  // Constructor 
@@ -124,7 +140,7 @@ class ClientHandler extends Thread
      this.s = s; 
      this.request = request;
      this.count = count;
-     this.clientName = Name;
+     setName(Name);
      this.RQ = 0;
      
  } 
@@ -159,7 +175,7 @@ class ClientHandler extends Thread
     		
    
     		
-    		if(splitMessage[2].equals(clientName)) {
+    		if(splitMessage[2].equals(this.getName())) {
      			int check = Integer.parseInt(splitMessage[1]);
      			
      		if(RQ == check) {
@@ -181,12 +197,17 @@ class ClientHandler extends Thread
            
          } catch (IOException e) { 
              e.printStackTrace(); 
-         } 
+         } }
      } 
        
+     
 
-  
- }
+		public void newPacket( DatagramPacket input) {
+			System.out.println("new packet is called" + getName());
+			this.request = input;
+		}
+		
+	
  
 
  // A method to convert the byte array data into a string representation.

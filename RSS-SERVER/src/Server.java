@@ -58,13 +58,18 @@ public class Server {
               requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
               
               socket.receive(requestPacket);
-              String clientName = formatMessage(clientMessage).toString();
+              
+              String message = formatMessage(clientMessage).toString();
+              
+              String splitMessage[] = message.split(" ");
     		 
               System.out.println("incoming data");
-              if(!(clients.contains(clientName))){
-            	  clients.add(clientName);
-            	  
-              Thread t = new ClientHandler(socket, requestPacket, count); 
+    		 
+              
+              
+              if(!(clients.contains(splitMessage[2]))){
+            	  clients.add(splitMessage[2]);
+              Thread t = new ClientHandler(socket, requestPacket, count, splitMessage[2]); 
               
               // Invoking the start() method 
               t.start(); 
@@ -108,15 +113,19 @@ class ClientHandler extends Thread
  //final DataOutputStream dos; 
  final DatagramSocket s; 
    
- final DatagramPacket request;
+ DatagramPacket request;
  final int count;
+ String clientName;
+ int RQ;
 
  // Constructor 
- public ClientHandler(DatagramSocket s, DatagramPacket request, int count)  
+ public ClientHandler(DatagramSocket s, DatagramPacket request, int count, String Name)  
  { 
      this.s = s; 
      this.request = request;
      this.count = count;
+     this.clientName = Name;
+     this.RQ = 0;
      
  } 
 
@@ -125,45 +134,35 @@ class ClientHandler extends Thread
  { 
      String received; 
      String toreturn; 
-     String clientName;
      System.out.println("Started new Client Thread");
 
-     //after this we start a client thread 
-
-     String message = "Initial Message received: " + formatMessage(request.getData());
-     System.out.println(message);
-     
-     clientName = formatMessage(request.getData()).toString();
-     byte[] buffer = message.getBytes();
-
+    
+   
      
      
      // server can get the info about the client
      InetAddress clientAddress = request.getAddress();
      int clientPort = request.getPort();
 
-     DatagramPacket response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
-     try {
-		s.send(response);
-	} catch (IOException e2) {
-		// TODO Auto-generated catch block
-		e2.printStackTrace();
-	}
-
-
+  
 
      
      while (true)  
      { 
     	 try {
-    		 s.receive(request);
-    		 message = formatMessage(request.getData()).toString();
-    		 
-    		 String messageOut = "Message : " + message +  " ClientName: "+ clientName;
-             System.out.println(messageOut);
-    		 
-             System.out.println(message.equals(clientName));
-    		 if(message.equals(clientName)) {
+    		
+    		
+    		  String message = formatMessage(request.getData()).toString();
+              String splitMessage[] = message.split(" ");
+    		
+    		 //s.receive(request);
+    		
+   
+    		
+    		if(splitMessage[2].equals(clientName)) {
+     			int check = Integer.parseInt(splitMessage[1]);
+     			
+     		if(RQ == check) {
     			
     		 
              //after this we start a client thread 
@@ -171,12 +170,14 @@ class ClientHandler extends Thread
         	 message = "client " + count +  " " + formatMessage(request.getData());
              System.out.println(message);
 
-             buffer = message.getBytes();
-
+             byte[] buffer = message.getBytes();
        
-             response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
+             DatagramPacket response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
              s.send(response);
+             
+             RQ += 1;
         	 }
+    		}
            
          } catch (IOException e) { 
              e.printStackTrace(); 

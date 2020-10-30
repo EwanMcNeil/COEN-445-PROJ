@@ -2,11 +2,25 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Client {
 
+	
+		static int RQ;
+		
+
+	      public Client(){
+	       
+	    	  Client.RQ = 0;
+	      }
+	      
+	      
+		
+		
          public static void main(String[] args) {
 
                 if (args.length < 2) {
@@ -29,15 +43,23 @@ public class Client {
                         // Create a Scanner object to read input.
                         Scanner console = new Scanner(System.in);
                      String message;
-                        System.out.print("Enter a message: ");
+                     
+                     //need to first send 
+                     //REGISTER RQ# Name IP Address Socket#
+                        System.out.print("Enter your name: ");
+                        
                         message = console.nextLine();
-
+                        
+                        message = "REGISTER " + RQ + " " + message;
+                        System.out.println(message);
 
                         byte[] requestbuffer = message.getBytes();
 
                         //Send message to server
                         DatagramPacket request = new DatagramPacket(requestbuffer,requestbuffer.length, address, port);
                         socket.send(request);
+                        
+                        
 
                         //wait for response
                         byte[] buffer = new byte[512];
@@ -48,6 +70,9 @@ public class Client {
                         String serverMessage = new String(buffer, 0, response.getLength());
                         System.out.println(serverMessage);
                         System.out.println();
+                        
+                        
+                        RQ += 1;
 
                         Thread.sleep(10000);
                     }

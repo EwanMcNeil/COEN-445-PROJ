@@ -20,8 +20,6 @@ public class Server {
       }
       
       
-
-      
       //Main function starts up server
       public static void main(String[] args) {
           if (args.length < 1) {
@@ -69,17 +67,30 @@ public class Server {
               System.out.println("incoming data");
     		 
               
-              
-              if(!(clients.contains(splitMessage[2]))){
-            	  clients.add(splitMessage[2]);
-              ClientHandler t = new ClientHandler(socket, requestPacket, count, splitMessage[2]); 
-              
-              
-              // Invoking the start() method 
-              t.start(); 
+              if(splitMessage[0].equals("REGISTER")) {
+            	  if(!(clients.contains(splitMessage[2]))){
+            		  clients.add(splitMessage[2]);
+            		  ClientHandler t = new ClientHandler(socket, requestPacket, count, splitMessage[2]); 
               
               
-              clientHandlers.add(t);
+            		  // Invoking the start() method 
+            		  t.start(); 
+              
+              
+            		  clientHandlers.add(t);
+            	  }
+            	  else{
+            		
+            		  //REGISTER-DENIED RQ# Reason
+            		  message = "REGISTER_DENIED" + splitMessage[1] +  "NAME_IN_USE";
+                      System.out.println(message);
+
+                      byte[] buffer = message.getBytes();
+            		 
+            		  DatagramPacket response = new DatagramPacket(buffer,buffer.length, requestPacket.getAddress(), requestPacket.getPort());
+                      socket.send(response);
+                      
+            	  }
               }
               else {
             	  for(int i = 0; i < clientHandlers.size(); i++)
@@ -126,10 +137,9 @@ public class Server {
 class ClientHandler extends Thread  
 { 
  
- //final DataInputStream dis; 
- //final DataOutputStream dos; 
+
  final DatagramSocket s; 
-   
+ Boolean startUp;
  DatagramPacket request;
  final int count;
  int RQ;
@@ -142,6 +152,7 @@ class ClientHandler extends Thread
      this.count = count;
      setName(Name);
      this.RQ = 0;
+     startUp = true;
      
  } 
 
@@ -168,31 +179,40 @@ class ClientHandler extends Thread
     	 try {
     		
     		
-    		  String message = formatMessage(request.getData()).toString();
-              String splitMessage[] = message.split(" ");
-    		
-    		 //s.receive(request);
+    		 String message = formatMessage(request.getData()).toString();
+             String splitMessage[] = message.split(" ");
     		
    
-    		
-    		if(splitMessage[2].equals(this.getName())) {
-     			int check = Integer.parseInt(splitMessage[1]);
-     			
-     		if(RQ == check) {
-    			
-    		 
-             //after this we start a client thread 
-
-        	 message = "client " + count +  " " + formatMessage(request.getData());
-             System.out.println(message);
-
-             byte[] buffer = message.getBytes();
-       
-             DatagramPacket response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
-             s.send(response);
-             
-             RQ += 1;
-        	 }
+    		if(startUp) {
+    			//REGISTERED RQ#
+    			 message = "REGISTERED " + RQ; 
+                 byte[] buffer = message.getBytes();
+                 DatagramPacket response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
+                 s.send(response);
+                 
+                 startUp = false;
+                 RQ += 1;
+    		}
+    		else {
+	    		if(splitMessage[2].equals(this.getName())) {
+	     			int check = Integer.parseInt(splitMessage[1]);
+	     			
+	     		if(RQ == check) {
+	    			
+	    		 
+	             //after this we start a client thread 
+	
+	        	 message = "client " + count +  " " + formatMessage(request.getData());
+	             System.out.println(message);
+	
+	             byte[] buffer = message.getBytes();
+	       
+	             DatagramPacket response = new DatagramPacket(buffer,buffer.length, clientAddress, clientPort);
+	             s.send(response);
+	             
+	             RQ += 1;
+	        	 }
+    		}
     		}
            
          } catch (IOException e) { 

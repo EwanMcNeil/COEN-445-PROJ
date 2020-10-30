@@ -123,9 +123,18 @@ public class Client {
              //format and print response
              String serverMessage = new String(buffer, 0, response.getLength());
              System.out.println(serverMessage);
-             System.out.println();
              
+             
+             String splitMessage[] = serverMessage.split(" ");
              RQ += 1;
+             
+             
+             if(splitMessage[0].equals("REGISTER_DENIED")) {
+            	 registerCall(socket);
+             }
+            
+             
+             
              }
          
          private void commandInput(DatagramSocket socket) throws IOException{

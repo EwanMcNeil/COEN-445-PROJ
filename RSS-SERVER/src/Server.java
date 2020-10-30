@@ -82,7 +82,7 @@ public class Server {
             	  else{
             		
             		  //REGISTER-DENIED RQ# Reason
-            		  message = "REGISTER_DENIED" + splitMessage[1] +  "NAME_IN_USE";
+            		  message = "REGISTER_DENIED" + " " + splitMessage[1] + " " +  "NAME_IN_USE";
                       System.out.println(message);
 
                       byte[] buffer = message.getBytes();

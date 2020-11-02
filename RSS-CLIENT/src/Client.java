@@ -9,170 +9,147 @@ import java.util.Scanner;
 
 public class Client {
 
-	
-		int RQ;
-		Boolean startUp;
-		InetAddress hostName;
-		String clientName;
-		int Port;
+	int RQ;
+	Boolean startUp;
+	InetAddress hostName;
+	String clientName;
+	int Port;
 
-	      public Client( InetAddress IP, int port){
-	       
-	    	  RQ = 0;
-	    	  startUp = true;
-	    	  hostName = IP;
-	    	  Port = port;
-	      }
-	      
-	      
-		
-		
-         public static void main(String[] args) {
+	public Client(InetAddress IP, int port) {
 
-                if (args.length < 2) {
-                    System.out.println("Missing Input");
-                    return;
+		RQ = 0;
+		startUp = true;
+		hostName = IP;
+		Port = port;
+	}
 
-                }
+	public static void main(String[] args) {
 
-                String hostname = args[0]; //IPaddress
-                int port = Integer.parseInt(args[1]);
-                
-                try {
-                    Client client = new Client(InetAddress.getByName(hostname), port);
-                    System.out.println("Starting Client connected to host: " + hostname + "on port: " + port);
-                    client.service();
+		if (args.length < 2) {
+			System.out.println("Missing Input");
+			return;
 
-                } catch (SocketException ex) {
-                    System.out.println("Socket error: " + ex.getMessage());
-                } catch (IOException ex) {
-                    System.out.println("I/O error: " + ex.getMessage());
-                }
+		}
 
-                
-            }
-         
-         
-         
-         private void service() throws IOException {
-        	 
-             try {
+		String hostname = args[0]; // IPaddress
+		int port = Integer.parseInt(args[1]);
 
-                 //InetAddress address = InetAddress.getByName(hostName);
-                 DatagramSocket socket = new DatagramSocket();
-                 socket.setSoTimeout(10000); // set time out to 10s
+		try {
+			Client client = new Client(InetAddress.getByName(hostname), port);
+			System.out.println("Starting Client connected to host: " + hostname + "on port: " + port);
+			client.service();
 
-                 while (true) {
+		} catch (SocketException ex) {
+			System.out.println("Socket error: " + ex.getMessage());
+		} catch (IOException ex) {
+			System.out.println("I/O error: " + ex.getMessage());
+		}
 
-                     // Create a Scanner object to read input.
-                  
-                  
-                  //need to first send 
-                  //REGISTER RQ# Name IP Address Socket#
-                     if(startUp) {
-                     	registerCall(socket);
-                     	startUp = false;
-                     }
-                     else {
-                    	 commandInput(socket);
-                     }
-                     
+	}
 
-                     Thread.sleep(10000);
-                 }
+	private void service() throws IOException {
 
-             } catch (SocketTimeoutException ex) {
-                 System.out.println("Timeout error: " + ex.getMessage());
-                 ex.printStackTrace();
-             } catch (IOException ex) {
-                 System.out.println("Client error: " + ex.getMessage());
-                 ex.printStackTrace();
-             } catch (InterruptedException ex) {
-                 ex.printStackTrace();
-             }
-         }
-         
-         
-         
-         
-         private void registerCall(DatagramSocket socket) throws IOException{
-        	Scanner console = new Scanner(System.in);
-           
-        	 
-        	 System.out.print("Enter your name to register with the server: ");
-             
-             String name = console.nextLine();
- 
-             clientName = name;
-             String message = "REGISTER " + RQ + " " + name + " " + hostName + " " + Port;
-             System.out.println(message);
+		try {
 
-             byte[] requestbuffer = message.getBytes();
+			// InetAddress address = InetAddress.getByName(hostName);
+			DatagramSocket socket = new DatagramSocket();
+			socket.setSoTimeout(10000); // set time out to 10s
 
-             //Send message to server
-             DatagramPacket request = new DatagramPacket(requestbuffer,requestbuffer.length,hostName, Port);
-             socket.send(request);
-             
-     
+			while (true) {
 
-             //wait for response
-             byte[] buffer = new byte[512];
-             DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-             socket.receive(response); // blocking call
+				// Create a Scanner object to read input.
 
-             //format and print response
-             String serverMessage = new String(buffer, 0, response.getLength());
-             System.out.println(serverMessage);
-             
-             
-             String splitMessage[] = serverMessage.split(" ");
-             RQ += 1;
-             
-             
-             if(splitMessage[0].equals("REGISTER_DENIED")) {
-            	 registerCall(socket);
-             }
-            
-             
-             
-             }
-         
-         private void commandInput(DatagramSocket socket) throws IOException{
-        	 	Scanner console = new Scanner(System.in);
-                String message;
-            	 
-            	 System.out.print("Enter the next command to send ");
-                 
-                 message = console.nextLine();
-     
-                 
-                 
-                 
-                 message = "ECHO " + RQ + " " + clientName + " " + hostName + " " + Port;
-                 System.out.println(message);
+				// need to first send
+				// REGISTER RQ# Name IP Address Socket#
+				if (startUp) {
+					registerCall(socket);
+					startUp = false;
+				} else {
+					commandInput(socket);
+				}
 
-                 byte[] requestbuffer = message.getBytes();
+				Thread.sleep(10000);
+			}
 
-                 //Send message to server
-                 DatagramPacket request = new DatagramPacket(requestbuffer,requestbuffer.length,hostName, Port);
-                 socket.send(request);
-                 
-         
+		} catch (SocketTimeoutException ex) {
+			System.out.println("Timeout error: " + ex.getMessage());
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			System.out.println("Client error: " + ex.getMessage());
+			ex.printStackTrace();
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
+	}
 
-                 //wait for response
-                 byte[] buffer = new byte[512];
-                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-                 socket.receive(response); // blocking call
+	private void registerCall(DatagramSocket socket) throws IOException {
+		Scanner console = new Scanner(System.in);
 
-                 //format and print response
-                 String serverMessage = new String(buffer, 0, response.getLength());
-                 System.out.println(serverMessage);
-                 System.out.println();
-                 
-                 RQ += 1;
-        	 
-        	 
-         }
-             
-             
-         }
+		System.out.print("Enter your name to register with the server: ");
+
+		String name = console.nextLine();
+
+		clientName = name;
+		String message = "REGISTER " + RQ + " " + name + " " + hostName + " " + Port;
+		System.out.println(message);
+
+		byte[] requestbuffer = message.getBytes();
+
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
+		socket.send(request);
+
+		// wait for response
+		byte[] buffer = new byte[512];
+		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+		socket.receive(response); // blocking call
+
+		// format and print response
+		String serverMessage = new String(buffer, 0, response.getLength());
+		System.out.println(serverMessage);
+
+		String splitMessage[] = serverMessage.split(" ");
+		RQ += 1;
+
+		if (splitMessage[0].equals("REGISTER_DENIED")) {
+			registerCall(socket);
+		}
+
+	}
+
+	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
+		Scanner console = new Scanner(System.in);
+		String message;
+
+		while (true) {
+			// message = "ECHO";
+
+			System.out.print("Enter the next message to be echoed back ");
+
+			message = console.nextLine();
+
+			message = "ECHO " + RQ + " " + clientName + " " + hostName + " " + Port + " " + message;
+			System.out.println("SENDING: " + message);
+
+			byte[] requestbuffer = message.getBytes();
+
+			// Send message to server
+			DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
+			socket.send(request);
+
+			// wait for response
+			byte[] buffer = new byte[512];
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+			socket.receive(response); // blocking call
+
+			// format and print response
+			String serverMessage = new String(buffer, 0, response.getLength());
+			System.out.println("RECIEVING: " + serverMessage);
+			System.out.println();
+
+			RQ += 1;
+		}
+
+	}
+
+}

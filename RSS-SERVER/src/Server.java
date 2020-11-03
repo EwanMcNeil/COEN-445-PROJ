@@ -9,7 +9,7 @@ import java.util.Vector;
 public class Server {
 
 	ArrayList<String> clients;
-	Vector<ClientHandler> clientHandlers = new <ClientHandler>Vector();
+	Vector<ClientHandler> clientHandlers = new Vector<>();
 	final int port;
 	int clientCount;
 
@@ -31,7 +31,7 @@ public class Server {
 
 		try {
 			Server server = new Server(port);
-			System.out.println("Echo Server listening on port " + port);
+			System.out.println("Server listening on port " + port);
 			server.service();
 
 		} catch (SocketException ex) {
@@ -56,40 +56,41 @@ public class Server {
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
-
-				if (splitMessage[0].equals("REGISTER")) {
-					if (!(clients.contains(splitMessage[2]))) {
-						clients.add(splitMessage[2]);
-						ClientHandler t = new ClientHandler(socket, requestPacket, clientCount, splitMessage[2]);
-
-						clientCount = clientCount + 1;
-						// Invoking the start() method
-						t.start();
-
-						clientHandlers.add(t);
-					} else {
-
-						// REGISTER-DENIED RQ# Reason
-						message = "REGISTER_DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
-						System.out.println(message);
-
-						byte[] buffer = message.getBytes();
-
-						DatagramPacket response = new DatagramPacket(buffer, buffer.length, requestPacket.getAddress(),
-								requestPacket.getPort());
-						socket.send(response);
-
-					}
-				} else {
-					for (int i = 0; i < clientHandlers.size(); i++) {
-
-						if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
-							clientHandlers.get(i).newPacket(requestPacket);
+				
+				System.out.println(message);
+				
+				switch(splitMessage[0]) {
+				
+					case "REGISTER":
+						
+						registerClient(socket, splitMessage, requestPacket);
+						
+						break;
+						
+					case "DE-REGISTER":
+						
+						deRegisterClient(socket, splitMessage, requestPacket);
+						
+						break;
+					
+					default:
+						for (int i = 0; i < clientHandlers.size(); i++) {
+							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
+								clientHandlers.get(i).newPacket(requestPacket);
+							}
 						}
+						
+						break;
+					
+					
+					
+				} 
+				
+				
+				
+				
 
-					}
-
-				}
+				
 			} catch (Exception e) {
 				socket.close();
 				e.printStackTrace();
@@ -97,99 +98,77 @@ public class Server {
 
 		}
 	}
+	
+	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
+		
 
-	private static StringBuilder formatMessage(byte[] a) {
-		if (a == null)
-			return null;
-		StringBuilder ret = new StringBuilder();
-		int i = 0;
-		while (a[i] != 0) {
-			ret.append((char) a[i]);
-			i++;
-		}
-		return ret;
-	}
+		if (!(clients.contains(splitMessage[2]))) {
+			clients.add(splitMessage[2]);
+			ClientHandler t = new ClientHandler(socket, packet, clientCount, splitMessage[2], this);
 
-}
+			clientCount = clientCount + 1;
+			// Invoking the start() method
+			t.start();
 
-//ClientHandler class 
-class ClientHandler extends Thread {
+			clientHandlers.add(t);
+		} else {
 
-	final DatagramSocket s;
-	Boolean startUp;
-	DatagramPacket request;
-	final int count;
-	int RQ;
+			// REGISTER-DENIED RQ# Reason
+			String message = "REGISTER_DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
+			System.out.println(message);
 
-	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, int count, String Name) {
-		this.s = s;
-		this.request = request;
-		this.count = count;
-		setName(Name);
-		this.RQ = 0;
-		startUp = true;
+			byte[] buffer = message.getBytes();
 
-	}
-
-	@Override
-	public void run() {
-		String received;
-		String toreturn;
-		System.out.println("Started new Client Thread");
-
-		// server can get the info about the client
-		InetAddress clientAddress = request.getAddress();
-		int clientPort = request.getPort();
-
-		while (true) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
+					packet.getPort());
 			try {
-
-				String message = formatMessage(request.getData()).toString();
-				String splitMessage[] = message.split(" ");
-
-				if (startUp) {
-					// REGISTERED RQ#
-					message = "REGISTERED " + RQ;
-					byte[] buffer = message.getBytes();
-					DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
-					s.send(response);
-
-					startUp = false;
-					RQ += 1;
-				} else {
-					if (splitMessage[2].equals(this.getName())) {
-						int check = Integer.parseInt(splitMessage[1]);
-
-						if (RQ == check) {
-
-							message = "client: " + getName() + " on thread: " + count + " has sent: " + splitMessage[5];
-							System.out.println(message);
-
-							String responseMSG = "Response to: " + splitMessage[5];
-
-							byte[] buffer = responseMSG.getBytes();
-
-							DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress,
-									clientPort);
-							s.send(response);
-
-							RQ += 1;
-						}
-					}
-				}
-
+				socket.send(response);
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+		
 	}
 
-	public void newPacket(DatagramPacket input) {
-		this.request = input;
-	}
+	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
+		
+		int RQ = 0;
+		for (int i = 0; i < clientHandlers.size(); i++) {
+			if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
+			
+				
+				RQ = clientHandlers.get(i).RQ;
+				
+				clientHandlers.get(i).stop();
+				clientHandlers.remove(i);
+				
+				//probs dont need
+				clientCount = clientCount -1;
+				
+				
+				clients.remove(splitMessage[2]);
+				
+			}
+		}
+		
+		String message = "DE-REGISTER" + " " +RQ +" " +splitMessage[2];
+		System.out.println(message);
 
-	// A method to convert the byte array data into a string representation.
+		byte[] buffer = message.getBytes();
+
+		DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
+				packet.getPort());
+		try {
+			socket.send(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	//TODO: REMOVE DATA FROM THE THING
+		
+	}
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;
@@ -201,4 +180,6 @@ class ClientHandler extends Thread {
 		}
 		return ret;
 	}
+
 }
+

@@ -119,37 +119,66 @@ public class Client {
 
 	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
 		Scanner console = new Scanner(System.in);
-		String message;
+		String input;
 
 		while (true) {
 			// message = "ECHO";
 
-			System.out.print("Enter the next message to be echoed back ");
+			System.out.print("Enter the next command to be sent: ");
 
-			message = console.nextLine();
+			input = console.nextLine();
 
-			message = "ECHO " + RQ + " " + clientName + " " + hostName + " " + Port + " " + message;
-			System.out.println("SENDING: " + message);
+			String splitInput[] = input.split(" ");
 
-			byte[] requestbuffer = message.getBytes();
+			// case statment of input and sending to server
+			switch (splitInput[0]) {
 
-			// Send message to server
-			DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
-			socket.send(request);
+			case "DE-REGISTER":
+				deRegisterClient(socket);
+				break;
+			}
 
-			// wait for response
-			byte[] buffer = new byte[512];
-			DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-			socket.receive(response); // blocking call
-
-			// format and print response
-			String serverMessage = new String(buffer, 0, response.getLength());
-			System.out.println("RECIEVING: " + serverMessage);
-			System.out.println();
-
-			RQ += 1;
 		}
 
 	}
 
+	private void deRegisterClient(DatagramSocket socket) {
+
+		String sendingMessage = "DE-REGISTER " + RQ + " " + clientName;
+		System.out.println(sendingMessage);
+
+		byte[] requestbuffer = sendingMessage.getBytes();
+
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
+		try {
+			socket.send(request);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// wait for response for dereg
+		byte[] buffer = new byte[512];
+		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+		try {
+			socket.receive(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // blocking call
+
+		// format and print response
+		String serverMessage = new String(buffer, 0, response.getLength());
+
+		String splitMessage[] = serverMessage.split(" ");
+		// if Deregister is sucessful
+
+		if (splitMessage[0].equals("DE-REGISTER")) {
+			System.out.print("DeRegister of name: " + splitMessage[2] + "Successful");
+			startUp = true;
+			RQ += 1;
+		}
+
+	}
 }

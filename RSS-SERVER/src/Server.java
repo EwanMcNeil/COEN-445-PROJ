@@ -12,26 +12,43 @@ public class Server {
 	Vector<ClientHandler> clientHandlers = new Vector<>();
 	final int port;
 	int clientCount;
-
-	public Server(int port) throws SocketException {
+	InetAddress Server2;
+	int Port2;
+	static boolean isServing = false;
+	
+	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 
 		clients = new ArrayList<>();
 		this.port = port;
 		clientCount = 0;
+		this.isServing = isServing;
+		Server2 = IP;
+		Port2 = port2;
 	}
 
 	// Main function starts up server
 	public static void main(String[] args) {
-		if (args.length < 1) {
+		if (args.length < 4) {
 			System.out.println("Missing Input");
 			return;
 		}
 
 		int port = Integer.parseInt(args[0]);
+		boolean is_serving = false;
+		
+		if(Integer.parseInt(args[1]) == 1)
+			is_serving = true;
+		else
+			is_serving = false;
+			
+		String Server2_name = args[2];
+		int port2 = Integer.parseInt(args[3]);
 
 		try {
-			Server server = new Server(port);
+			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
+			
 			System.out.println("Server listening on port " + port);
+			System.out.println("Serving: " + Boolean.valueOf(isServing));
 			server.service();
 
 		} catch (SocketException ex) {
@@ -81,21 +98,12 @@ public class Server {
 						}
 						
 						break;
-					
-					
-					
 				} 
-				
-				
-				
-				
 
-				
 			} catch (Exception e) {
 				socket.close();
 				e.printStackTrace();
 			}
-
 		}
 	}
 	

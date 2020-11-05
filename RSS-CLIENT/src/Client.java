@@ -11,32 +11,40 @@ public class Client {
 
 	int RQ;
 	Boolean startUp;
-	InetAddress hostName;
+	InetAddress hostName1;
+	InetAddress hostName2;
 	String clientName;
-	int Port;
-
-	public Client(InetAddress IP, int port) {
-
+	int Port1;
+	int Port2;
+	
+	public Client(InetAddress IP1, int port1, InetAddress IP2, int port2) {
 		RQ = 0;
 		startUp = true;
-		hostName = IP;
-		Port = port;
+		hostName1 = IP1;
+		Port1 = port1;
+		hostName2 = IP2;
+		Port2 = port2;
 	}
 
 	public static void main(String[] args) {
 
-		if (args.length < 2) {
+		if (args.length < 4) {
 			System.out.println("Missing Input");
 			return;
 
 		}
 
-		String hostname = args[0]; // IPaddress
-		int port = Integer.parseInt(args[1]);
+		String hostname1 = args[0]; // IPaddress
+		int port1 = Integer.parseInt(args[1]);
+		
+		String hostname2 = args[2];
+		int port2 = Integer.parseInt(args[3]);
 
 		try {
-			Client client = new Client(InetAddress.getByName(hostname), port);
-			System.out.println("Starting Client connected to host: " + hostname + "on port: " + port);
+			Client client = new Client(InetAddress.getByName(hostname1), port1, InetAddress.getByName(hostname2), port2);
+			System.out.println("Starting Client connected to host: " + hostname1 + " on port: " + port1);
+			System.out.println("Starting Client connected to host: " + hostname2 + " on port: " + port2);
+			
 			client.service();
 
 		} catch (SocketException ex) {
@@ -90,14 +98,23 @@ public class Client {
 		String name = console.nextLine();
 
 		clientName = name;
-		String message = "REGISTER " + RQ + " " + name + " " + hostName + " " + Port;
-		System.out.println(message);
+		
+		String message1 = "REGISTER " + RQ + " " + name + " " + hostName1 + " " + Port1;
+		System.out.println(message1);
 
-		byte[] requestbuffer = message.getBytes();
+		byte[] requestbuffer1 = message1.getBytes();
+		
+		String message2 = "REGISTER " + RQ + " " + name + " " + hostName2 + " " + Port2;
+		System.out.println(message2);
+
+		byte[] requestbuffer2 = message2.getBytes();
 
 		// Send message to server
-		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
-		socket.send(request);
+		DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
+		socket.send(request1);
+		
+		DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
+		socket.send(request2);
 
 		// wait for response
 		byte[] buffer = new byte[512];
@@ -130,7 +147,7 @@ public class Client {
 
 			String splitInput[] = input.split(" ");
 
-			// case statment of input and sending to server
+			// case statement of input and sending to server
 			switch (splitInput[0]) {
 
 			case "DE-REGISTER":
@@ -150,7 +167,7 @@ public class Client {
 		byte[] requestbuffer = sendingMessage.getBytes();
 
 		// Send message to server
-		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName, Port);
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
 		try {
 			socket.send(request);
 		} catch (IOException e) {

@@ -56,7 +56,8 @@ public class Client {
 	}
 
 	private void service() throws IOException {
-
+		Scanner console = new Scanner(System.in);
+		
 		try {
 
 			// InetAddress address = InetAddress.getByName(hostName);
@@ -70,13 +71,31 @@ public class Client {
 				// need to first send
 				// REGISTER RQ# Name IP Address Socket#
 				if (startUp) {
-					registerCall(socket);
+					
+					System.out.print("Enter the command to be sent (REGISTER, UPDATE): ");
+					String input = console.nextLine();
+					
+					switch(input.toUpperCase()) {
+						case "REGISTER":
+							registerCall(socket);
+							break;
+						
+						case "UPDATE":
+							updateClient(socket);
+							break;
+							
+						default:
+							System.out.println("Error: This is not a valid command!");
+							this.service();;
+							break;
+					}
+					
 					startUp = false;
 				} else {
 					commandInput(socket);
 				}
 
-				Thread.sleep(10000);
+				//Thread.sleep(10000);
 			}
 
 		} catch (SocketTimeoutException ex) {
@@ -89,10 +108,34 @@ public class Client {
 			ex.printStackTrace();
 		}
 	}
-
-	private void registerCall(DatagramSocket socket) throws IOException {
+	
+	private void updateClient(DatagramSocket socket) {
 		Scanner console = new Scanner(System.in);
+		
+		System.out.print("Enter your name to update from the server: ");
 
+		String name = console.nextLine();
+
+		clientName = name;
+		
+		String message = "UPDATE " + RQ + " " + name + " " + hostName1 + " " + Port1;
+		System.out.println(message);
+		
+		byte[] requestbuffer = message.getBytes();
+		
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
+		try {
+			socket.send(request);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	private void registerCall(DatagramSocket socket) {
+		Scanner console = new Scanner(System.in);
+		
 		System.out.print("Enter your name to register with the server: ");
 
 		String name = console.nextLine();
@@ -111,15 +154,30 @@ public class Client {
 
 		// Send message to server
 		DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
-		socket.send(request1);
+		try {
+			socket.send(request1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
-		socket.send(request2);
+		try {
+			socket.send(request2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		// wait for response
 		byte[] buffer = new byte[512];
 		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		socket.receive(response); // blocking call
+		try {
+			socket.receive(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // blocking call
 
 		// format and print response
 		String serverMessage = new String(buffer, 0, response.getLength());
@@ -139,8 +197,6 @@ public class Client {
 		String input;
 
 		while (true) {
-			// message = "ECHO";
-
 			System.out.print("Enter the next command to be sent: ");
 
 			input = console.nextLine();
@@ -189,7 +245,7 @@ public class Client {
 		String serverMessage = new String(buffer, 0, response.getLength());
 
 		String splitMessage[] = serverMessage.split(" ");
-		// if Deregister is sucessful
+		// if Deregister is successful
 
 		if (splitMessage[0].equals("DE-REGISTER")) {
 			System.out.print("DeRegister of name: " + splitMessage[2] + "Successful");

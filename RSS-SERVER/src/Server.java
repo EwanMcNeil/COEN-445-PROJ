@@ -33,6 +33,7 @@ public class Server {
 			return;
 		}
 
+		
 		int port = Integer.parseInt(args[0]);
 		boolean is_serving = false;
 		
@@ -74,7 +75,7 @@ public class Server {
 
 				String splitMessage[] = message.split(" ");
 				
-				System.out.println(message);
+				//System.out.println(message);
 				
 				switch(splitMessage[0]) {
 				
@@ -96,7 +97,6 @@ public class Server {
 								clientHandlers.get(i).newPacket(requestPacket);
 							}
 						}
-						
 						break;
 				} 
 
@@ -109,39 +109,45 @@ public class Server {
 	
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		
-
 		if (!(clients.contains(splitMessage[2]))) {
 			clients.add(splitMessage[2]);
 			ClientHandler t = new ClientHandler(socket, packet, clientCount, splitMessage[2], this);
 
 			clientCount = clientCount + 1;
+			
 			// Invoking the start() method
 			t.start();
 
 			clientHandlers.add(t);
 		} else {
-
 			// REGISTER-DENIED RQ# Reason
 			String message = "REGISTER_DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
 			System.out.println(message);
 
+
 			byte[] buffer = message.getBytes();
 
-			DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
-					packet.getPort());
-			try {
-				socket.send(response);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			if(isServing) {
+				DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
+				
+				try {
+					socket.send(response);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
 			}
 		}
-		
 	}
+		
 
 	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
-		
 		int RQ = 0;
+		
+		System.out.println("Number of clients before the de-register: " + clients.size());
+		
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
 			
@@ -152,27 +158,33 @@ public class Server {
 				clientHandlers.remove(i);
 				
 				//probs dont need
-				clientCount = clientCount -1;
-				
+				clientCount = clientCount - 1;
 				
 				clients.remove(splitMessage[2]);
 				
 			}
 		}
 		
-		String message = "DE-REGISTER" + " " +RQ +" " +splitMessage[2];
+		String message = "DE-REGISTER" + " " + RQ + " " + splitMessage[2];
 		System.out.println(message);
 
 		byte[] buffer = message.getBytes();
 
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
-				packet.getPort());
-		try {
-			socket.send(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
+			
+			try {
+				socket.send(response);
+				socket.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
+		System.out.println("Number of clients after the de-register: " + clients.size());
 		
 	//TODO: REMOVE DATA FROM THE THING
 		

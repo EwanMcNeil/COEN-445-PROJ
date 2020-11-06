@@ -11,6 +11,7 @@ class ClientHandler extends Thread {
 	DatagramPacket request;
 	final int count;
 	int RQ;
+	Server server;
 
 	// Constructor
 	public ClientHandler(DatagramSocket s, DatagramPacket request, int count, String Name, Server server) {
@@ -20,13 +21,11 @@ class ClientHandler extends Thread {
 		setName(Name);
 		this.RQ = 0;
 		startUp = true;
-
+		this.server = server;
 	}
 
 	@Override
 	public void run() {
-		String received;
-		String toreturn;
 		System.out.println("Started new Client Thread");
 
 		// server can get the info about the client
@@ -48,35 +47,53 @@ class ClientHandler extends Thread {
 
 					startUp = false;
 					RQ += 1;
-				} else {
+				} 
+				
+				else {
 					if (splitMessage[2].equals(this.getName())) {
 						int check = Integer.parseInt(splitMessage[1]);
 
+						if(splitMessage[0].equals("UPDATE")) {
+							RQ = 0;
+						}
+						
 						if (RQ == check) {
 
-							// switch(splitMessage[0]) {
-
-							message = "client: " + getName() + " on thread: " + count + " has sent: " + splitMessage[5];
-							System.out.println(message);
-
-							String responseMSG = "Response to: " + splitMessage[5];
-
-							byte[] buffer = responseMSG.getBytes();
-
-							DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress,
-									clientPort);
-							s.send(response);
-
-							RQ += 1;
-							// }
+							switch(splitMessage[0]) {
+								case "UPDATE":
+									updateClient(clientAddress, clientPort);
+									break;
+							}
 						}
 					}
-
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void updateClient(InetAddress clientAddress, int clientPort) {
+		String message  = "UPDATE-CONFIRMED " + RQ;
+
+		byte[] buffer = message.getBytes();
+		
+		if(server.isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, server.Server2, server.Port2);
+		
+			try {
+				s.send(response);
+				s.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		RQ += 1;
 	}
 
 	public void newPacket(DatagramPacket input) {

@@ -17,6 +17,9 @@ public class Client {
 	int Port1;
 	int Port2;
 	
+	InetAddress currentHost;
+	int currentPort;
+	
 	public Client(InetAddress IP1, int port1, InetAddress IP2, int port2) {
 		RQ = 0;
 		startUp = true;
@@ -24,8 +27,11 @@ public class Client {
 		Port1 = port1;
 		hostName2 = IP2;
 		Port2 = port2;
+		
+		
 	}
-
+	
+	//client needs localhost 10011 localhost 10012
 	public static void main(String[] args) {
 
 		if (args.length < 4) {
@@ -179,6 +185,8 @@ public class Client {
 			e.printStackTrace();
 		} // blocking call
 
+		currentHost = response.getAddress();
+		currentPort = response.getPort();
 		// format and print response
 		String serverMessage = new String(buffer, 0, response.getLength());
 		System.out.println(serverMessage);
@@ -209,8 +217,11 @@ public class Client {
 			case "DE-REGISTER":
 				deRegisterClient(socket);
 				break;
+			
+			case "ECHO":
+				echo(socket);
+				break;
 			}
-
 		}
 
 	}
@@ -223,7 +234,7 @@ public class Client {
 		byte[] requestbuffer = sendingMessage.getBytes();
 
 		// Send message to server
-		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
 		try {
 			socket.send(request);
 		} catch (IOException e) {
@@ -254,4 +265,47 @@ public class Client {
 		}
 
 	}
+	
+	
+	private void echo(DatagramSocket socket) {
+		
+		System.out.print("Enter the message you would like to echo: ");
+		Scanner localConsole = new Scanner(System.in);
+		String message = localConsole.nextLine();
+	
+
+		String sendingMessage = "ECHO " + RQ + " " + clientName + " " + message ;
+		System.out.println(sendingMessage);
+
+		byte[] requestbuffer = sendingMessage.getBytes();
+
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
+		try {
+			socket.send(request);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// wait for response for dereg
+		byte[] buffer = new byte[512];
+		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+		try {
+			socket.receive(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // blocking call
+
+		// format and print response
+		String serverMessage = new String(buffer, 0, response.getLength());
+
+		String splitMessage[] = serverMessage.split(" ");
+		// if Deregister is successful
+		
+		System.out.print("Server echoed: " + serverMessage);
+
+		
+}
 }

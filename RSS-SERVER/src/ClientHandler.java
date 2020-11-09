@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-
+import java.util.concurrent.*; 
 //ClientHandler class 
 class ClientHandler extends Thread {
 
@@ -12,9 +12,11 @@ class ClientHandler extends Thread {
 	final int count;
 	int RQ;
 	Server server;
+	Semaphore messageFlag;
+	
 
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, int count, String Name, Server server) {
+	public ClientHandler(DatagramSocket s, DatagramPacket request,Semaphore newMessageFlag,  int count, String Name, Server server) {
 		this.s = s;
 		this.request = request;
 		this.count = count;
@@ -22,6 +24,7 @@ class ClientHandler extends Thread {
 		this.RQ = 0;
 		startUp = true;
 		this.server = server;
+		messageFlag = newMessageFlag;
 	}
 
 	@Override
@@ -35,39 +38,38 @@ class ClientHandler extends Thread {
 		while (true) {
 			try {
 
+				messageFlag.acquire();
 				String message = formatMessage(request.getData()).toString();
 				String splitMessage[] = message.split(" ");
-
+				System.out.println("FLAG AQUIRED");
 				if (startUp) {
 					// REGISTERED RQ#
+					if(server.isServing) {
 					message = "REGISTERED " + RQ;
 					byte[] buffer = message.getBytes();
 					DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
 					s.send(response);
 
+					}
 					startUp = false;
 					RQ += 1;
 				} 
-				
 				else {
 					if (splitMessage[2].equals(this.getName())) {
-						int check = Integer.parseInt(splitMessage[1]);
-
-						if(splitMessage[0].equals("UPDATE")) {
-							RQ = 0;
-						}
 						
-						if (RQ == check) {
-
+//						
 							switch(splitMessage[0]) {
 								case "UPDATE":
 									updateClient(clientAddress, clientPort);
 									break;
+								case "ECHO":
+									echoClient(clientAddress, clientPort);
+									break;
 							}
 						}
 					}
-				}
-			} catch (IOException e) {
+				
+			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
@@ -96,12 +98,38 @@ class ClientHandler extends Thread {
 		RQ += 1;
 	}
 
+	
+	private void echoClient(InetAddress clientAddress, int clientPort) {
+		String message  = "ECHO " + RQ + " " + getName();
+
+		byte[] buffer = message.getBytes();
+		
+		if(server.isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, server.Server2, server.Port2);
+		
+			try {
+				s.send(response);
+				s.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		RQ += 1;
+	}
+	
+	
 	public void newPacket(DatagramPacket input) {
 		this.request = input;
 	}
 
 	public int getRQ() {
 		return RQ;
+		
 	}
 
 	// A method to convert the byte array data into a string representation.

@@ -5,11 +5,13 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.concurrent.*; 
 
 public class Server {
 
 	ArrayList<String> clients;
 	Vector<ClientHandler> clientHandlers = new Vector<>();
+	Vector<Semaphore> messageFlags = new Vector<>();
 	final int port;
 	int clientCount;
 	InetAddress Server2;
@@ -27,6 +29,7 @@ public class Server {
 	}
 
 	// Main function starts up server
+	//server needs 10011 1 localhost 10012
 	public static void main(String[] args) {
 		if (args.length < 4) {
 			System.out.println("Missing Input");
@@ -75,7 +78,8 @@ public class Server {
 
 				String splitMessage[] = message.split(" ");
 				
-				//System.out.println(message);
+				System.out.println("INCOMING MESSAGE:");
+				System.out.println(message);
 				
 				switch(splitMessage[0]) {
 				
@@ -93,14 +97,17 @@ public class Server {
 					
 					default:
 						for (int i = 0; i < clientHandlers.size(); i++) {
+							System.out.println("DEFAULT");
 							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
 								clientHandlers.get(i).newPacket(requestPacket);
+								messageFlags.get(i).release();
 							}
 						}
 						break;
 				} 
 
 			} catch (Exception e) {
+				//here an exception causes the program to crash if out of bounds
 				socket.close();
 				e.printStackTrace();
 			}
@@ -110,8 +117,10 @@ public class Server {
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		
 		if (!(clients.contains(splitMessage[2]))) {
+			Semaphore messageFlag = new Semaphore(1);
+			messageFlags.add(messageFlag);
 			clients.add(splitMessage[2]);
-			ClientHandler t = new ClientHandler(socket, packet, clientCount, splitMessage[2], this);
+			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, splitMessage[2], this);
 
 			clientCount = clientCount + 1;
 			

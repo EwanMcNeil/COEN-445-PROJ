@@ -124,18 +124,57 @@ public class Client {
 
 		clientName = name;
 		
-		String message = "UPDATE " + RQ + " " + name + " " + hostName1 + " " + Port1;
-		System.out.println(message);
 		
-		byte[] requestbuffer = message.getBytes();
+		String message1 = "UPDATE " + RQ + " " + name + " " + hostName1 + " " + Port1;
+		System.out.print("CLIENT send:");
+		System.out.println(message1);
+
+		byte[] requestbuffer1 = message1.getBytes();
 		
+		String message2 = "UPDATE " + RQ + " " + name + " " + hostName2 + " " + Port2;
+		System.out.print("CLIENT send:");
+		System.out.println(message2);
+
+		byte[] requestbuffer2 = message2.getBytes();
+
 		// Send message to server
-		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
+		DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
 		try {
-			socket.send(request);
+			socket.send(request1);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
+		try {
+			socket.send(request2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// wait for response
+		byte[] buffer = new byte[512];
+		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+		try {
+			socket.receive(response);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // blocking call
+
+		currentHost = response.getAddress();
+		currentPort = response.getPort();
+		// format and print response
+		String serverMessage = new String(buffer, 0, response.getLength());
+		System.out.println(serverMessage);
+
+		String splitMessage[] = serverMessage.split(" ");
+		RQ += 1;
+
+		if (splitMessage[0].equals("UPDATE_DENIED")) {
+			registerCall(socket);
 		}
 	}
 
@@ -304,7 +343,7 @@ public class Client {
 		String splitMessage[] = serverMessage.split(" ");
 		// if Deregister is successful
 		
-		System.out.print("Server echoed: " + serverMessage);
+		System.out.println("Server echoed: " + serverMessage);
 
 		
 }

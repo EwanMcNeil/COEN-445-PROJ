@@ -13,8 +13,8 @@ class ClientHandler extends Thread {
 	int RQ;
 	Server server;
 	Semaphore messageFlag;
-	
-
+	InetAddress clientAddress;
+	int clientPort;
 	// Constructor
 	public ClientHandler(DatagramSocket s, DatagramPacket request,Semaphore newMessageFlag,  int count, String Name, Server server) {
 		this.s = s;
@@ -32,8 +32,8 @@ class ClientHandler extends Thread {
 		System.out.println("Started new Client Thread");
 
 		// server can get the info about the client
-		InetAddress clientAddress = request.getAddress();
-		int clientPort = request.getPort();
+		clientAddress = request.getAddress();
+	    clientPort = request.getPort();
 
 		while (true) {
 			try {
@@ -60,7 +60,7 @@ class ClientHandler extends Thread {
 //						
 							switch(splitMessage[0]) {
 								case "UPDATE":
-									updateClient(clientAddress, clientPort);
+									updateClient();
 									break;
 								case "ECHO":
 									echoClient(clientAddress, clientPort);
@@ -75,8 +75,11 @@ class ClientHandler extends Thread {
 		}
 	}
 	
-	private void updateClient(InetAddress clientAddress, int clientPort) {
-		String message  = "UPDATE-CONFIRMED " + RQ;
+	private void updateClient() {
+		String message  = "UPDATE-CONFIRMED " + RQ + " " + getName();
+		System.out.println(message);
+		this.clientAddress = this.request.getAddress();
+		this.clientPort = this.request.getPort();
 
 		byte[] buffer = message.getBytes();
 		

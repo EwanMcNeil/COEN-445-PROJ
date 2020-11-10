@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -78,27 +80,25 @@ public class Server {
 
 				String splitMessage[] = message.split(" ");
 				
-				System.out.println("INCOMING MESSAGE:");
+				System.out.print("Server receives: ");
 				System.out.println(message);
 				
-				switch(splitMessage[0]) {
+				String command = splitMessage[0].toUpperCase().replace("_", "-");
+				String name = splitMessage[2];
 				
+				switch(command) {
 					case "REGISTER":
-						
 						registerClient(socket, splitMessage, requestPacket);
-						
 						break;
 						
 					case "DE-REGISTER":
-						
 						deRegisterClient(socket, splitMessage, requestPacket);
-						
 						break;
 					
 					default:
 						for (int i = 0; i < clientHandlers.size(); i++) {
-							System.out.println("DEFAULT");
-							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
+							//System.out.println("DEFAULT");
+							if (clientHandlers.get(i).getName().equals(name)) {
 								clientHandlers.get(i).newPacket(requestPacket);
 								messageFlags.get(i).release();
 							}
@@ -114,23 +114,49 @@ public class Server {
 		}
 	}
 	
+	private void writeClientsFile(ArrayList<String> list) {
+		FileWriter writer;
+		String output = "";
+		
+		try {
+			writer = new FileWriter("clients_files.txt");
+			
+			for(int i = 0; i < list.size(); i++) {
+				output += list.get(i) + "\n";
+			}
+			
+			writer.write(output);
+			
+			writer.close();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	}
+	
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		
-		if (!(clients.contains(splitMessage[2]))) {
+		String name = splitMessage[2];
+		
+		if (!(clients.contains(name))) {
 			Semaphore messageFlag = new Semaphore(1);
 			messageFlags.add(messageFlag);
-			clients.add(splitMessage[2]);
-			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, splitMessage[2], this);
+			clients.add(name);
+			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, name, this);
 
-			clientCount = clientCount + 1;
+			clientCount += 1;
 			
 			// Invoking the start() method
 			t.start();
 
 			clientHandlers.add(t);
-		} else {
+			writeClientsFile(clients);
+		} 
+		
+		else {
 			// REGISTER-DENIED RQ# Reason
 			String message = "REGISTER_DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
+			System.out.print("Server sends: ");
 			System.out.println(message);
 
 
@@ -139,14 +165,15 @@ public class Server {
 			if(isServing) {
 				DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
 				
+				DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
+				
 				try {
 					socket.send(response);
+					socket.send(ServerResponse);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
-				
 			}
 		}
 	}
@@ -154,27 +181,26 @@ public class Server {
 
 	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		int RQ = 0;
+		String name = splitMessage[2];
 		
 		System.out.println("Number of clients before the de-register: " + clients.size());
 		
 		for (int i = 0; i < clientHandlers.size(); i++) {
-			if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
-			
-				
+			if (clientHandlers.get(i).getName().equals(name)) {
 				RQ = clientHandlers.get(i).RQ;
 				
 				clientHandlers.get(i).stop();
 				clientHandlers.remove(i);
 				
-				//probs dont need
-				clientCount = clientCount - 1;
+				clientCount -= 1;
 				
-				clients.remove(splitMessage[2]);
-				
+				clients.remove(name);
+				writeClientsFile(clients);
 			}
 		}
 		
-		String message = "DE-REGISTER" + " " + RQ + " " + splitMessage[2];
+		String message = "DE-REGISTER" + " " + RQ + " " + name;
+		System.out.print("Server sends: ");
 		System.out.println(message);
 
 		byte[] buffer = message.getBytes();
@@ -198,9 +224,11 @@ public class Server {
 	//TODO: REMOVE DATA FROM THE THING
 		
 	}
+	
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;
+		
 		StringBuilder ret = new StringBuilder();
 		int i = 0;
 		while (a[i] != 0) {

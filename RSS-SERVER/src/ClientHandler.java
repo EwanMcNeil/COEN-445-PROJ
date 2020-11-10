@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-
+import java.util.concurrent.*; 
 //ClientHandler class 
 class ClientHandler extends Thread {
 
@@ -11,80 +11,128 @@ class ClientHandler extends Thread {
 	DatagramPacket request;
 	final int count;
 	int RQ;
-
+	Server server;
+	Semaphore messageFlag;
+	InetAddress clientAddress;
+	int clientPort;
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, int count, String Name, Server server) {
+	public ClientHandler(DatagramSocket s, DatagramPacket request,Semaphore newMessageFlag,  int count, String Name, Server server) {
 		this.s = s;
 		this.request = request;
 		this.count = count;
 		setName(Name);
 		this.RQ = 0;
 		startUp = true;
-
+		this.server = server;
+		messageFlag = newMessageFlag;
 	}
 
 	@Override
 	public void run() {
-		String received;
-		String toreturn;
 		System.out.println("Started new Client Thread");
 
 		// server can get the info about the client
-		InetAddress clientAddress = request.getAddress();
-		int clientPort = request.getPort();
+		clientAddress = request.getAddress();
+	    clientPort = request.getPort();
 
 		while (true) {
 			try {
 
+				messageFlag.acquire();
 				String message = formatMessage(request.getData()).toString();
 				String splitMessage[] = message.split(" ");
-
+				System.out.println("FLAG AQUIRED");
 				if (startUp) {
 					// REGISTERED RQ#
+					if(server.isServing) {
 					message = "REGISTERED " + RQ;
 					byte[] buffer = message.getBytes();
 					DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
 					s.send(response);
 
+					}
 					startUp = false;
 					RQ += 1;
-				} else {
+				} 
+				else {
 					if (splitMessage[2].equals(this.getName())) {
-						int check = Integer.parseInt(splitMessage[1]);
-
-						if (RQ == check) {
-
-							// switch(splitMessage[0]) {
-
-							message = "client: " + getName() + " on thread: " + count + " has sent: " + splitMessage[5];
-							System.out.println(message);
-
-							String responseMSG = "Response to: " + splitMessage[5];
-
-							byte[] buffer = responseMSG.getBytes();
-
-							DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress,
-									clientPort);
-							s.send(response);
-
-							RQ += 1;
-							// }
+						
+//						
+							switch(splitMessage[0]) {
+								case "UPDATE":
+									updateClient();
+									break;
+								case "ECHO":
+									echoClient(clientAddress, clientPort);
+									break;
+							}
 						}
 					}
-
-				}
-			} catch (IOException e) {
+				
+			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 	}
+	
+	private void updateClient() {
+		String message  = "UPDATE-CONFIRMED " + RQ + " " + getName();
+		System.out.println(message);
+		this.clientAddress = this.request.getAddress();
+		this.clientPort = this.request.getPort();
 
+		byte[] buffer = message.getBytes();
+		
+		if(server.isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, server.Server2, server.Port2);
+		
+			try {
+				s.send(response);
+				s.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		RQ += 1;
+	}
+
+	
+	private void echoClient(InetAddress clientAddress, int clientPort) {
+		String message  = "ECHO " + RQ + " " + getName();
+
+		byte[] buffer = message.getBytes();
+		
+		if(server.isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, server.Server2, server.Port2);
+		
+			try {
+				s.send(response);
+				s.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		RQ += 1;
+	}
+	
+	
 	public void newPacket(DatagramPacket input) {
 		this.request = input;
 	}
 
 	public int getRQ() {
 		return RQ;
+		
 	}
 
 	// A method to convert the byte array data into a string representation.

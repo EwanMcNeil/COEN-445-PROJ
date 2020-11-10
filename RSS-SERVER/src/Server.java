@@ -97,12 +97,12 @@ public class Server {
 					
 					default:
 						for (int i = 0; i < clientHandlers.size(); i++) {
-							//System.out.println("DEFAULT");
-							if (clientHandlers.get(i).getName().equals(name)) {
+							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
 								clientHandlers.get(i).newPacket(requestPacket);
 								messageFlags.get(i).release();
 							}
 						}
+						//otherRequests(socket, splitMessage, requestPacket);
 						break;
 				} 
 
@@ -142,7 +142,7 @@ public class Server {
 			Semaphore messageFlag = new Semaphore(1);
 			messageFlags.add(messageFlag);
 			clients.add(name);
-			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, name, this);
+			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, name, this, clients);
 
 			clientCount += 1;
 			
@@ -155,17 +155,19 @@ public class Server {
 		
 		else {
 			// REGISTER-DENIED RQ# Reason
-			String message = "REGISTER_DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
-			System.out.print("Server sends: ");
-			System.out.println(message);
+			String message = "REGISTER-DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
+			String message2 = "REGISTER-DENIED" + " " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
+			//System.out.print("Server sends: ");
+			//System.out.println(message);
 
 
 			byte[] buffer = message.getBytes();
+			byte[] buffer2 = message2.getBytes();
 
 			if(isServing) {
 				DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
 				
-				DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
+				DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
 				
 				try {
 					socket.send(response);
@@ -183,8 +185,6 @@ public class Server {
 		int RQ = 0;
 		String name = splitMessage[2];
 		
-		System.out.println("Number of clients before the de-register: " + clients.size());
-		
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
 				RQ = clientHandlers.get(i).RQ;
@@ -200,8 +200,8 @@ public class Server {
 		}
 		
 		String message = "DE-REGISTER" + " " + RQ + " " + name;
-		System.out.print("Server sends: ");
-		System.out.println(message);
+		//System.out.print("Server sends: ");
+		//System.out.println(message);
 
 		byte[] buffer = message.getBytes();
 
@@ -219,10 +219,38 @@ public class Server {
 			}
 		}
 		
-		System.out.println("Number of clients after the de-register: " + clients.size());
 		
 	//TODO: REMOVE DATA FROM THE THING
 		
+	}
+	
+	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
+		String name = splitMessage[2];
+		
+		if(clientHandlers.contains(name)) {
+			for (int i = 0; i < clientHandlers.size(); i++) {
+				if (clientHandlers.get(i).getName().equals(name)) {
+					clientHandlers.get(i).newPacket(packet);
+					messageFlags.get(i).release();
+				}
+				
+			}
+		}
+		
+		else {
+			String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
+			
+			byte[] buffer1 = message1.getBytes();
+			
+			DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
+			
+			try {
+				socket.send(response1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private static StringBuilder formatMessage(byte[] a) {

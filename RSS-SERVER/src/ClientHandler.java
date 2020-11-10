@@ -17,9 +17,10 @@ class ClientHandler extends Thread {
 	Semaphore messageFlag;
 	InetAddress clientAddress;
 	int clientPort;
+	ArrayList<String> clients;
 	
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server) {
+	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server, ArrayList<String> clients) {
 		this.s = s;
 		this.request = request;
 		this.count = count;
@@ -28,6 +29,7 @@ class ClientHandler extends Thread {
 		startUp = true;
 		this.server = server;
 		messageFlag = newMessageFlag;
+		this.clients = clients;
 	}
 
 	@Override
@@ -50,7 +52,7 @@ class ClientHandler extends Thread {
 				
 				if (startUp) {
 					// REGISTERED RQ#
-					registerClient();
+					registerClient(splitMessage);
 				} 
 				
 				else {
@@ -60,7 +62,7 @@ class ClientHandler extends Thread {
 						
 							switch(command) {
 								case "UPDATE":
-									updateClient();
+									updateClient(splitMessage);
 									break;
 								
 								case "SUBJECTS":
@@ -80,35 +82,42 @@ class ClientHandler extends Thread {
 		}
 	}
 	
-	private void registerClient() {
-		String message = "REGISTERED " + RQ;
+	private void registerClient(String splitMessage[]) {
 		
-		System.out.print("Server sends: ");
-		System.out.println(message);
+		String message = "REGISTERED " + RQ;
+		String message2 = "REGISTERED " + RQ + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
+		
+		//System.out.print("Server sends: ");
+		//System.out.println(message);
 		
 		byte[] buffer = message.getBytes();
-	
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+		byte[] buffer2 = message2.getBytes();
 		
-		DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, server.Server2, server.Port2);
-		
-		try {
-			s.send(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if(server.isServing) {
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+			
+			DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, server.Server2, server.Port2);
+			
+			try {
+				s.send(response);
+				s.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-		
+
 		startUp = false;
 		RQ += 1;
-		
-		//s.send(ServerResponse);
 	}
 	
-	private void updateClient() {
-		String message  = "UPDATE-CONFIRMED " + RQ + " " + getName();
-		System.out.print("Server sends: ");
-		System.out.println(message);
+	private void updateClient(String splitMessage[]) {
+		String name = splitMessage[2];
+		
+		String message  = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
+		
+		//System.out.print("Server sends: ");
+		//System.out.println(message);
 		this.clientAddress = this.request.getAddress();
 		this.clientPort = this.request.getPort();
 
@@ -158,8 +167,8 @@ class ClientHandler extends Thread {
 		else
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
 		
-		System.out.print("Server sends: ");
-		System.out.println(message);
+		//System.out.print("Server sends: ");
+		//System.out.println(message);
 		
 		this.clientAddress = this.request.getAddress();
 		this.clientPort = this.request.getPort();
@@ -187,8 +196,8 @@ class ClientHandler extends Thread {
 	private void echoClient(InetAddress clientAddress, int clientPort) {
 		String message  = "ECHO " + RQ + " " + getName();
 		
-		System.out.print("Server sends: ");
-		System.out.println(message);
+		//System.out.print("Server sends: ");
+		//System.out.println(message);
 		
 		byte[] buffer = message.getBytes();
 		

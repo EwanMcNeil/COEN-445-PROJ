@@ -1,4 +1,7 @@
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -66,6 +69,7 @@ public class Server {
 
 	private void service() throws IOException {
 		DatagramSocket socket = new DatagramSocket(port);
+		initializeClients();
 
 		while (true) {
 			DatagramPacket requestPacket = null;
@@ -114,15 +118,27 @@ public class Server {
 		}
 	}
 	
-	private void writeClientsFile(ArrayList<String> list) {
+	private void writeClientsFile(ArrayList<String> clients, Vector<ClientHandler> clientHandlers) {
 		FileWriter writer;
 		String output = "";
+		
+		//ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this, clients);
 		
 		try {
 			writer = new FileWriter("clients_files.txt");
 			
-			for(int i = 0; i < list.size(); i++) {
-				output += list.get(i) + "\n";
+
+			/*for(int i = 0; i < clients.size(); i++) {
+				String client = clients.get(i);
+				
+				for(int j = 0; j < clientHandlers.size(); j++) {
+					if(clientHandlers.get(j).name.equals(client))
+						output += client + " " + clientHandlers.get(j).name + "\n";
+				}
+			}*/
+			
+			for(int j = 0; j < clientHandlers.size(); j++) {
+				output += clientHandlers.get(j).name + "\n";
 			}
 			
 			writer.write(output);
@@ -134,6 +150,25 @@ public class Server {
 		}
 	}
 	
+	private void initializeClients() throws IOException {
+		File file = new File("clients_files.txt");
+		BufferedReader reader;
+		
+		if(file.exists() &&  !file.isDirectory()) {
+			reader = new BufferedReader(new FileReader("clients_files.txt"));
+				
+			String line = reader.readLine();
+				
+			while(line != null) {
+				clients.add(line);
+				
+				line = reader.readLine();
+			}
+
+		}
+			
+	}
+	
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		
 		String name = splitMessage[2];
@@ -142,7 +177,7 @@ public class Server {
 			Semaphore messageFlag = new Semaphore(1);
 			messageFlags.add(messageFlag);
 			clients.add(name);
-			ClientHandler t = new ClientHandler(socket, packet,messageFlag, clientCount, name, this, clients);
+			ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this);
 
 			clientCount += 1;
 			
@@ -150,7 +185,7 @@ public class Server {
 			t.start();
 
 			clientHandlers.add(t);
-			writeClientsFile(clients);
+			writeClientsFile(clients, clientHandlers);
 		} 
 		
 		else {
@@ -179,7 +214,6 @@ public class Server {
 			}
 		}
 	}
-		
 
 	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		int RQ = 0;
@@ -195,7 +229,7 @@ public class Server {
 				clientCount -= 1;
 				
 				clients.remove(name);
-				writeClientsFile(clients);
+				writeClientsFile(clients, clientHandlers);
 			}
 		}
 		

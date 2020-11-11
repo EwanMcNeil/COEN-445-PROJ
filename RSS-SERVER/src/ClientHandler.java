@@ -14,22 +14,21 @@ class ClientHandler extends Thread {
 	final int count;
 	int RQ;
 	Server server;
+	String name;
 	Semaphore messageFlag;
 	InetAddress clientAddress;
 	int clientPort;
-	ArrayList<String> clients;
 	
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server, ArrayList<String> clients) {
+	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server) {
 		this.s = s;
 		this.request = request;
 		this.count = count;
-		setName(Name);
+		this.name = Name;
 		this.RQ = 0;
 		startUp = true;
 		this.server = server;
 		messageFlag = newMessageFlag;
-		this.clients = clients;
 	}
 
 	@Override

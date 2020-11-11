@@ -100,13 +100,13 @@ public class Server {
 						break;
 					
 					default:
-						for (int i = 0; i < clientHandlers.size(); i++) {
+						/*for (int i = 0; i < clientHandlers.size(); i++) {
 							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
 								clientHandlers.get(i).newPacket(requestPacket);
 								messageFlags.get(i).release();
 							}
-						}
-						//otherRequests(socket, splitMessage, requestPacket);
+						}*/
+						otherRequests(socket, splitMessage, requestPacket);
 						break;
 				} 
 
@@ -261,7 +261,7 @@ public class Server {
 	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
 		
-		if(clientHandlers.contains(name)) {
+		if(clients.contains(name)) {
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
 					clientHandlers.get(i).newPacket(packet);
@@ -272,17 +272,20 @@ public class Server {
 		}
 		
 		else {
-			String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
 			
-			byte[] buffer1 = message1.getBytes();
+			if(isServing) {
+				String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
 			
-			DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
+				byte[] buffer1 = message1.getBytes();
 			
-			try {
-				socket.send(response1);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
+			
+				try {
+					socket.send(response1);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 	}

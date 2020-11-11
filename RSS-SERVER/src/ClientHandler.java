@@ -24,6 +24,7 @@ class ClientHandler extends Thread {
 		this.s = s;
 		this.request = request;
 		this.count = count;
+		setName(Name);
 		this.name = Name;
 		this.RQ = 0;
 		startUp = true;

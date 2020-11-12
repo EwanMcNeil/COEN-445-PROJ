@@ -18,9 +18,10 @@ class ClientHandler extends Thread {
 	Semaphore messageFlag;
 	InetAddress clientAddress;
 	int clientPort;
+	ArrayList<String> subjects;
 	
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server) {
+	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server, ArrayList<String> subjects) {
 		this.s = s;
 		this.request = request;
 		this.count = count;
@@ -30,6 +31,7 @@ class ClientHandler extends Thread {
 		startUp = true;
 		this.server = server;
 		messageFlag = newMessageFlag;
+		this.subjects = subjects;
 	}
 
 	@Override
@@ -146,6 +148,7 @@ class ClientHandler extends Thread {
 		String message = "";
 		String subjects_sent = "";
 		boolean all_in = true;
+		String new_subjects  = "";
 		
 		splitMessage = Arrays.copyOfRange(splitMessage, 3, splitMessage.length);
 		
@@ -160,12 +163,36 @@ class ClientHandler extends Thread {
 				all_in = false;
 				break;
 			}
+			
+			else {
+				if(!subjects.contains(subject)) {
+					new_subjects += subject + " ";
+					subjects.add(subject);
+				}
+
+			}
 		}
 		
-		if(all_in)
+		System.out.print("splitMessage: ");
+		for(int i = 0; i < splitMessage.length; i++)
+			System.out.print(splitMessage[i] + " ");
+		
+		System.out.println("\n" + "subjects_sent: " + subjects_sent);
+		
+		System.out.println("new_subjects: " + new_subjects);
+		
+		System.out.print("subjects: ");
+		for(int i = 0; i < subjects.size(); i++)
+			System.out.print(subjects.get(i) + " ");
+		
+		if(all_in) {
 			message = "SUBJECTS-UPDATED " + RQ + " " + getName() + " " + subjects_sent;
-		else
+		}
+			
+		else {
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
+		}
+			
 		
 		//System.out.print("Server sends: ");
 		//System.out.println(message);

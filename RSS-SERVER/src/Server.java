@@ -118,27 +118,22 @@ public class Server {
 		}
 	}
 	
-	private void writeClientsFile(ArrayList<String> clients, Vector<ClientHandler> clientHandlers) {
+	private void writeClientsFile(Vector<ClientHandler> clientHandlers) {
 		FileWriter writer;
 		String output = "";
-		
-		//ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this, clients);
 		
 		try {
 			writer = new FileWriter("clients_files.txt");
 			
-
-			/*for(int i = 0; i < clients.size(); i++) {
-				String client = clients.get(i);
-				
-				for(int j = 0; j < clientHandlers.size(); j++) {
-					if(clientHandlers.get(j).name.equals(client))
-						output += client + " " + clientHandlers.get(j).name + "\n";
-				}
-			}*/
-			
 			for(int j = 0; j < clientHandlers.size(); j++) {
-				output += clientHandlers.get(j).name + "\n";
+				ArrayList<String> subjects_list = clientHandlers.get(j).subjects;
+				String client_subjects = "";
+				
+				for(int k = 0; k < subjects_list.size(); k++)
+					client_subjects += subjects_list.get(k) + " ";
+				
+				output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " " + client_subjects + " "
+				        + clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
 			}
 			
 			writer.write(output);
@@ -172,12 +167,13 @@ public class Server {
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		
 		String name = splitMessage[2];
+		ArrayList<String> subjects = new ArrayList<>();
 		
 		if (!(clients.contains(name))) {
 			Semaphore messageFlag = new Semaphore(1);
 			messageFlags.add(messageFlag);
 			clients.add(name);
-			ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this);
+			ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this, subjects);
 
 			clientCount += 1;
 			
@@ -185,7 +181,7 @@ public class Server {
 			t.start();
 
 			clientHandlers.add(t);
-			writeClientsFile(clients, clientHandlers);
+			writeClientsFile(clientHandlers);
 		} 
 		
 		else {
@@ -225,11 +221,12 @@ public class Server {
 				
 				clientHandlers.get(i).stop();
 				clientHandlers.remove(i);
+				messageFlags.remove(i);
 				
 				clientCount -= 1;
 				
 				clients.remove(name);
-				writeClientsFile(clients, clientHandlers);
+				writeClientsFile(clientHandlers);
 			}
 		}
 		
@@ -266,6 +263,7 @@ public class Server {
 				if (clientHandlers.get(i).getName().equals(name)) {
 					clientHandlers.get(i).newPacket(packet);
 					messageFlags.get(i).release();
+					writeClientsFile(clientHandlers);
 				}
 				
 			}

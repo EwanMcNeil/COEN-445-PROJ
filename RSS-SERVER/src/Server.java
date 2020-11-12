@@ -84,7 +84,6 @@ public class Server {
 
 				String splitMessage[] = message.split(" ");
 				
-				System.out.print("Server receives: ");
 				System.out.println(message);
 				
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
@@ -106,7 +105,7 @@ public class Server {
 								messageFlags.get(i).release();
 							}
 						}*/
-						System.out.print("default: ");
+					
 						otherRequests(socket, splitMessage, requestPacket);
 						break;
 				} 
@@ -311,5 +310,17 @@ public class Server {
 		return ret;
 	}
 
+
 }
+
+
+
+
+
+
+
+
+
+
+
 

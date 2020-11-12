@@ -7,6 +7,7 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
 public class Client {
 
@@ -17,10 +18,85 @@ public class Client {
 	String clientName;
 	int Port1;
 	int Port2;
+	Semaphore printSem;
 	
-	InetAddress currentHost;
-	int currentPort;
+	public InetAddress currentHost;
 	
+    public int currentPort;
+
+	
+	public int getRQ() {
+		return RQ;
+	}
+
+	public void setRQ(int rQ) {
+		RQ = rQ;
+	}
+
+	public Boolean getStartUp() {
+		return startUp;
+	}
+
+	public void setStartUp(Boolean startUp) {
+		this.startUp = startUp;
+	}
+
+	public InetAddress getHostName1() {
+		return hostName1;
+	}
+
+	public void setHostName1(InetAddress hostName1) {
+		this.hostName1 = hostName1;
+	}
+
+	public InetAddress getHostName2() {
+		return hostName2;
+	}
+
+	public void setHostName2(InetAddress hostName2) {
+		this.hostName2 = hostName2;
+	}
+
+	public String getClientName() {
+		return clientName;
+	}
+
+	public void setClientName(String clientName) {
+		this.clientName = clientName;
+	}
+
+	public int getPort1() {
+		return Port1;
+	}
+
+	public void setPort1(int port1) {
+		Port1 = port1;
+	}
+
+	public int getPort2() {
+		return Port2;
+	}
+
+	public void setPort2(int port2) {
+		Port2 = port2;
+	}
+
+	public InetAddress getCurrentHost() {
+		return currentHost;
+	}
+
+	public void setCurrentHost(InetAddress currentHost) {
+		this.currentHost = currentHost;
+	}
+
+	public int getCurrentPort() {
+		return currentPort;
+	}
+
+	public void setCurrentPort(int currentPort) {
+		this.currentPort = currentPort;
+	}
+
 	public Client(InetAddress IP1, int port1, InetAddress IP2, int port2) {
 		RQ = 0;
 		startUp = true;
@@ -28,6 +104,7 @@ public class Client {
 		Port1 = port1;
 		hostName2 = IP2;
 		Port2 = port2;
+		printSem = new Semaphore(1);
 	}
 	
 	//client needs localhost 10011 localhost 10012
@@ -51,6 +128,7 @@ public class Client {
 			System.out.println("Starting Client connected to host: " + hostname2 + " on port: " + port2);
 			
 			client.service();
+			
 
 		} catch (SocketException ex) {
 			System.out.println("Socket error: " + ex.getMessage());
@@ -66,8 +144,8 @@ public class Client {
 		try {
 			// InetAddress address = InetAddress.getByName(hostName);
 			DatagramSocket socket = new DatagramSocket();
-			socket.setSoTimeout(10000); // set time out to 10s
-
+			socketHandler socketHandler = new socketHandler(socket, this, printSem);
+			socketHandler.start();
 			while (true) {
 				// Create a Scanner object to read input.
 
@@ -75,7 +153,9 @@ public class Client {
 				// REGISTER RQ# Name IP Address Socket#
 				if (startUp) {
 					
+					printSem.acquire();
 					System.out.print("Enter the command to be sent (REGISTER, UPDATE): ");
+					printSem.release();
 					String input = console.nextLine();
 					
 					input = input.toUpperCase().replace("_", "-");
@@ -90,7 +170,9 @@ public class Client {
 							break;
 							
 						default:
+							printSem.acquire();
 							System.out.println("Error: This is not a valid command!");
+							printSem.release();
 							this.service();
 							break;
 					}
@@ -119,8 +201,10 @@ public class Client {
 		String input;
 
 		while (true) {
+			printSem.acquire();
 			System.out.print("Enter the next command to be sent: ");
 
+			printSem.release();
 			input = console.nextLine();
 
 			String splitInput[] = input.split(" ");
@@ -151,11 +235,12 @@ public class Client {
 
 	}
 	
-	private void registerClient(DatagramSocket socket) {
+	private void registerClient(DatagramSocket socket) throws InterruptedException {
 		Scanner console = new Scanner(System.in);
 		
+		printSem.acquire();
 		System.out.print("Enter your name to register with the server: ");
-
+		printSem.release();
 		String name = console.nextLine();
 
 		clientName = name;
@@ -189,32 +274,7 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		// wait for response
-		byte[] buffer = new byte[512];
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		try {
-			socket.receive(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // blocking call
 
-		currentHost = response.getAddress();
-		currentPort = response.getPort();
-		
-		// format and print response
-		String serverMessage = new String(buffer, 0, response.getLength());
-		System.out.print("CLIENT receives: ");
-		System.out.println(serverMessage);
-
-		String splitMessage[] = serverMessage.split(" ");
-		RQ += 1;
-		
-		String command = splitMessage[0].toUpperCase().replace("_", "-");
-
-		if (command.equals("REGISTER-DENIED")) {
-			registerClient(socket);
-		}
 
 	}
 
@@ -235,38 +295,16 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		// wait for response for dereg
-		byte[] buffer = new byte[512];
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		try {
-			socket.receive(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // blocking call
-
-		// format and print response
-		String serverMessage = new String(buffer, 0, response.getLength());
-
-		String splitMessage[] = serverMessage.split(" ");
 		
-		String command = splitMessage[0].toUpperCase().replace("_", "-");
-		String name = splitMessage[2];
-		
-		// if De-register is successful
-		if (command.equals("DE-REGISTER")) {
-			System.out.print("CLIENT receives: ");
-			System.out.println(serverMessage);
-			startUp = true;
-			RQ += 1;
-		}
 	}
 	
-	private void updateClient(DatagramSocket socket) {
+	private void updateClient(DatagramSocket socket) throws InterruptedException {
 		Scanner console = new Scanner(System.in);
 		
+		printSem.acquire();
 		System.out.print("Enter your name to update from the server: ");
-
+		printSem.release();
+		
 		String name = console.nextLine();
 
 		clientName = name;
@@ -301,41 +339,14 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		// wait for response
-		byte[] buffer = new byte[512];
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		try {
-			socket.receive(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // blocking call
-
-		currentHost = response.getAddress();
-		currentPort = response.getPort();
-		
-		// format and print response
-		String serverMessage = new String(buffer, 0, response.getLength());
-		System.out.print("CLIENT receives: ");
-		System.out.println(serverMessage);
-
-		String splitMessage[] = serverMessage.split(" ");
-		RQ += 1;
-		
-		String command = splitMessage[0].toUpperCase().replace("_", "-");
-		
-		if (command.equals("UPDATE-DENIED")) {
-			try {
-				service();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+	
 	}
 	
-	private void updateSubjects(DatagramSocket socket) {
+	private void updateSubjects(DatagramSocket socket) throws InterruptedException {
+		
+		printSem.acquire();
 		System.out.print("Enter the subjects you would like to subscribe too: ");
+		printSem.release();
 		Scanner console = new Scanner(System.in);
 		
 		String message = console.nextLine();
@@ -363,37 +374,19 @@ public class Client {
 			e.printStackTrace();
 		}
 		
-		// Wait for response
-		byte[] buffer = new byte[512];
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		try {
-			socket.receive(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // blocking call
 
-		// format and print response
-		String serverMessage = new String(buffer, 0, response.getLength());
-		
-		System.out.print("CLIENT receives: ");
-		System.out.println(serverMessage);
 
 		RQ += 1;
 		
-		String splitMessage2[] = serverMessage.split(" ");
-		
-		String command = splitMessage2[0].toUpperCase().replace("_", "-");
-		
-		if (command.equals("SUBJECTS-REJECTED")) {
-			updateSubjects(socket);
-		}
+
 	}
 
 	
-	private void echo(DatagramSocket socket) {
+	private void echo(DatagramSocket socket) throws InterruptedException {
 		
+		printSem.acquire();
 		System.out.print("Enter the message you would like to echo: ");
+		printSem.release();
 		Scanner console = new Scanner(System.in);
 		String message = console.nextLine();
 	
@@ -411,23 +404,13 @@ public class Client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-		// wait for response for dereg
-		byte[] buffer = new byte[512];
-		DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-		try {
-			socket.receive(response);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // blocking call
-
-		// format and print response
-		String serverMessage = new String(buffer, 0, response.getLength());
-
-		String splitMessage[] = serverMessage.split(" ");
 		
-		System.out.print("CLIENT receives: ");
-		System.out.println(serverMessage);	
+		RQ += 1;
+
 	}
 }
+
+
+
+
+

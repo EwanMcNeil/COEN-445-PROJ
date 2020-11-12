@@ -9,12 +9,11 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.*; 
 
 public class Server {
-
-	ArrayList<String> clients;
 	Vector<ClientHandler> clientHandlers = new Vector<>();
 	Vector<Semaphore> messageFlags = new Vector<>();
 	final int port;
@@ -22,10 +21,9 @@ public class Server {
 	InetAddress Server2;
 	int Port2;
 	static boolean isServing = false;
+	DatagramSocket socket;
 	
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
-
-		clients = new ArrayList<>();
 		this.port = port;
 		clientCount = 0;
 		this.isServing = isServing;
@@ -58,7 +56,11 @@ public class Server {
 			
 			System.out.println("Server listening on port " + port);
 			System.out.println("Serving: " + Boolean.valueOf(isServing));
+			
+			//initializeClients();
+			
 			server.service();
+			
 
 		} catch (SocketException ex) {
 			System.out.println("Socket error: " + ex.getMessage());
@@ -68,13 +70,14 @@ public class Server {
 	}
 
 	private void service() throws IOException {
-		DatagramSocket socket = new DatagramSocket(port);
-		initializeClients();
-
+		socket = new DatagramSocket(port);
+		
+		//initializeClients();
+		
 		while (true) {
 			DatagramPacket requestPacket = null;
+			
 			try {
-
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
 
@@ -90,6 +93,8 @@ public class Server {
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
 				String name = splitMessage[2];
 				
+				initializeClients();
+				
 				switch(command) {
 					case "REGISTER":
 						registerClient(socket, splitMessage, requestPacket);
@@ -100,12 +105,6 @@ public class Server {
 						break;
 					
 					default:
-						/*for (int i = 0; i < clientHandlers.size(); i++) {
-							if (clientHandlers.get(i).getName().equals(splitMessage[2])) {
-								clientHandlers.get(i).newPacket(requestPacket);
-								messageFlags.get(i).release();
-							}
-						}*/
 						otherRequests(socket, splitMessage, requestPacket);
 						break;
 				} 
@@ -118,7 +117,7 @@ public class Server {
 		}
 	}
 	
-	private void writeClientsFile(Vector<ClientHandler> clientHandlers) {
+	public void writeClientsFile() {
 		FileWriter writer;
 		String output = "";
 		
@@ -130,10 +129,20 @@ public class Server {
 				String client_subjects = "";
 				
 				for(int k = 0; k < subjects_list.size(); k++)
-					client_subjects += subjects_list.get(k) + " ";
+					if(k != subjects_list.size() - 1)
+						client_subjects += subjects_list.get(k) + ",";
+					
+					else
+						client_subjects += subjects_list.get(k);
 				
-				output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " " + client_subjects + " "
+				if(subjects_list.size() != 0)
+					output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " " + client_subjects + " "
 				        + clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
+				
+				else
+					output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " "
+					        + clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
+				
 			}
 			
 			writer.write(output);
@@ -145,20 +154,54 @@ public class Server {
 		}
 	}
 	
-	private void initializeClients() throws IOException {
-		File file = new File("clients_files.txt");
+	public void initializeClients() throws IOException {
+		System.out.println("In initializeClients");
+		String file_name = "clients_files.txt";
+		
+		File file = new File(file_name);
 		BufferedReader reader;
 		
+		DatagramPacket requestPacket = null;
+		Semaphore messageFlag = new Semaphore(1);
+
 		if(file.exists() &&  !file.isDirectory()) {
-			reader = new BufferedReader(new FileReader("clients_files.txt"));
+			reader = new BufferedReader(new FileReader(file_name));
 				
 			String line = reader.readLine();
-				
+			String subjects[] = null;
+			
 			while(line != null) {
-				clients.add(line);
+				String splitLine[] = line.split(" ");
+				
+				if(line.contains(",")) {
+					subjects = splitLine[2].split(",");
+				}
+					
+				
+				System.out.print("splitLine: ");
+				for(String s : splitLine)
+					System.out.print(s + " ");
+				System.out.println("");
+				
+				/*if(subjects.length != 0) {
+					System.out.print("subjects: ");
+					for(String s : subjects)
+						System.out.print(s + " ");
+					System.out.println("");
+				}*/
+				
+				/**ClientHandler client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects));
+				
+				client.start();
+				
+				clientHandlers.add(client);*/
+				
+				
 				
 				line = reader.readLine();
 			}
+			
+			reader.close();
 
 		}
 			
@@ -168,11 +211,16 @@ public class Server {
 		
 		String name = splitMessage[2];
 		ArrayList<String> subjects = new ArrayList<>();
+		ArrayList<String> clients_name = new ArrayList<>();
 		
-		if (!(clients.contains(name))) {
+		for(ClientHandler clientHandler : clientHandlers)
+			clients_name.add(clientHandler.name);
+		
+		if (!(clients_name.contains(name))) {
 			Semaphore messageFlag = new Semaphore(1);
+			
 			messageFlags.add(messageFlag);
-			clients.add(name);
+			
 			ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this, subjects);
 
 			clientCount += 1;
@@ -181,15 +229,12 @@ public class Server {
 			t.start();
 
 			clientHandlers.add(t);
-			writeClientsFile(clientHandlers);
 		} 
 		
 		else {
 			// REGISTER-DENIED RQ# Reason
 			String message = "REGISTER-DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
 			String message2 = "REGISTER-DENIED" + " " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
-			//System.out.print("Server sends: ");
-			//System.out.println(message);
 
 
 			byte[] buffer = message.getBytes();
@@ -224,15 +269,12 @@ public class Server {
 				messageFlags.remove(i);
 				
 				clientCount -= 1;
-				
-				clients.remove(name);
-				writeClientsFile(clientHandlers);
+
+				writeClientsFile();
 			}
 		}
 		
 		String message = "DE-REGISTER" + " " + RQ + " " + name;
-		//System.out.print("Server sends: ");
-		//System.out.println(message);
 
 		byte[] buffer = message.getBytes();
 
@@ -248,22 +290,24 @@ public class Server {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-		
-		
-	//TODO: REMOVE DATA FROM THE THING
-		
+		}	
 	}
 	
-	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
+	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) throws IOException {
 		String name = splitMessage[2];
 		
-		if(clients.contains(name)) {
+		ArrayList<String> clients_name = new ArrayList<>();
+		
+		for(ClientHandler clientHandler : clientHandlers)
+			clients_name.add(clientHandler.name);
+		
+		//initializeClients();
+		
+		if(clients_name.contains(name)) {
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
 					clientHandlers.get(i).newPacket(packet);
 					messageFlags.get(i).release();
-					writeClientsFile(clientHandlers);
 				}
 				
 			}

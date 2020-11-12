@@ -36,8 +36,6 @@ class ClientHandler extends Thread {
 
 	@Override
 	public void run() {
-		//System.out.println("Started new Client Thread");
-
 		// server can get the info about the client
 		clientAddress = request.getAddress();
 	    clientPort = request.getPort();
@@ -49,9 +47,7 @@ class ClientHandler extends Thread {
 				String message = formatMessage(request.getData()).toString();
 				String splitMessage[] = message.split(" ");
 				String name = splitMessage[2];
-				
-				//System.out.println("FLAG ACQUIRED");
-				
+
 				if (startUp) {
 					// REGISTERED RQ#
 					registerClient(splitMessage);
@@ -89,9 +85,6 @@ class ClientHandler extends Thread {
 		String message = "REGISTERED " + RQ;
 		String message2 = "REGISTERED " + RQ + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
 		
-		//System.out.print("Server sends: ");
-		//System.out.println(message);
-		
 		byte[] buffer = message.getBytes();
 		byte[] buffer2 = message2.getBytes();
 		
@@ -111,6 +104,8 @@ class ClientHandler extends Thread {
 
 		startUp = false;
 		RQ += 1;
+		
+		server.writeClientsFile();
 	}
 	
 	private void updateClient(String splitMessage[]) {
@@ -118,8 +113,6 @@ class ClientHandler extends Thread {
 		
 		String message  = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
 		
-		//System.out.print("Server sends: ");
-		//System.out.println(message);
 		this.clientAddress = this.request.getAddress();
 		this.clientPort = this.request.getPort();
 
@@ -141,6 +134,8 @@ class ClientHandler extends Thread {
 		}
 		
 		RQ += 1;
+		
+		server.writeClientsFile();
 	}
 	
 	private void updateSubjects(InetAddress clientAddress, int clientPort, String splitMessage[]) {
@@ -173,7 +168,7 @@ class ClientHandler extends Thread {
 			}
 		}
 		
-		System.out.print("splitMessage: ");
+		/*System.out.print("splitMessage: ");
 		for(int i = 0; i < splitMessage.length; i++)
 			System.out.print(splitMessage[i] + " ");
 		
@@ -184,6 +179,7 @@ class ClientHandler extends Thread {
 		System.out.print("subjects: ");
 		for(int i = 0; i < subjects.size(); i++)
 			System.out.print(subjects.get(i) + " ");
+		System.out.println("");*/
 		
 		if(all_in) {
 			message = "SUBJECTS-UPDATED " + RQ + " " + getName() + " " + subjects_sent;
@@ -192,10 +188,6 @@ class ClientHandler extends Thread {
 		else {
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
 		}
-			
-		
-		//System.out.print("Server sends: ");
-		//System.out.println(message);
 		
 		this.clientAddress = this.request.getAddress();
 		this.clientPort = this.request.getPort();
@@ -218,13 +210,12 @@ class ClientHandler extends Thread {
 		}
 		
 		RQ += 1;
+		
+		server.writeClientsFile();
 	}
 	
 	private void echoClient(InetAddress clientAddress, int clientPort) {
 		String message  = "ECHO " + RQ + " " + getName();
-		
-		//System.out.print("Server sends: ");
-		//System.out.println(message);
 		
 		byte[] buffer = message.getBytes();
 		

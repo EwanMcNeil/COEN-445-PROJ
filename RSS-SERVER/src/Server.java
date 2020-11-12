@@ -69,7 +69,7 @@ public class Server {
 
 	private void service() throws IOException {
 		DatagramSocket socket = new DatagramSocket(port);
-		initializeClients();
+//		initializeClients();
 
 		while (true) {
 			DatagramPacket requestPacket = null;
@@ -106,6 +106,7 @@ public class Server {
 								messageFlags.get(i).release();
 							}
 						}*/
+						System.out.print("default: ");
 						otherRequests(socket, splitMessage, requestPacket);
 						break;
 				} 
@@ -185,7 +186,7 @@ public class Server {
 			t.start();
 
 			clientHandlers.add(t);
-			writeClientsFile(clients, clientHandlers);
+		//	writeClientsFile(clients, clientHandlers);
 		} 
 		
 		else {
@@ -221,15 +222,18 @@ public class Server {
 		
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
+				
+				System.out.println("found the one to delete " + name );
 				RQ = clientHandlers.get(i).RQ;
 				
 				clientHandlers.get(i).stop();
 				clientHandlers.remove(i);
+				messageFlags.remove(i);
 				
 				clientCount -= 1;
 				
 				clients.remove(name);
-				writeClientsFile(clients, clientHandlers);
+				//writeClientsFile(clients, clientHandlers);
 			}
 		}
 		
@@ -261,9 +265,13 @@ public class Server {
 	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
 		
+		System.out.print("other requests ");
+		
 		if(clients.contains(name)) {
+			System.out.print("first if ");
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
+					System.out.print("second if: ");
 					clientHandlers.get(i).newPacket(packet);
 					messageFlags.get(i).release();
 				}

@@ -52,12 +52,14 @@ class ClientHandler extends Thread {
 				
 				if (startUp) {
 					// REGISTERED RQ#
+					System.out.print("Startup");
 					registerClient(splitMessage);
 				} 
 				
 				else {
 					if (name.equals(this.getName())) {
 						
+						System.out.print("loop if");
 						String command = splitMessage[0].toUpperCase().replace("_", "-");
 						
 							switch(command) {
@@ -198,7 +200,7 @@ class ClientHandler extends Thread {
 		
 		//System.out.print("Server sends: ");
 		//System.out.println(message);
-		
+		System.out.print("echocall");
 		byte[] buffer = message.getBytes();
 		
 		if(server.isServing) {

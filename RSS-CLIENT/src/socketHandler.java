@@ -44,8 +44,7 @@ public class socketHandler extends Thread{
 				e.printStackTrace();
 			}
 			
-			System.out.print("Client has recieved:");
-			System.out.print(message);
+		
 			
 			
 			printSem.release();
@@ -57,36 +56,75 @@ public class socketHandler extends Thread{
 			
 			switch(command) {
 				case "REGISTERED":
-					registered(packet);
+					System.out.println("Client has recieved:");
+					System.out.println(message);
+					registered(packet, splitMessage);
 					break;
 					
 				case "DE-REGISTER":
-					deRegister(packet);
+					System.out.println("Client has recieved:");
+					System.out.println(message);
+					deRegister(packet, splitMessage);
 					break;
 					
 					
 				case "ECHO":
+					System.out.println("Client has recieved echo :");
+					System.out.println(message);
 					
 					
 					break;
 					
 					
 				case "SUBJECTS-UPDATED":
-					subjectsUpdated(packet);
+					System.out.println("Client has recieved:");
+					client.subjects.add(splitMessage[3]);
+					System.out.println(message);
+					subjectsUpdated(packet, splitMessage);
 					break;
 					
 				case "REGISTER-DENIED":
-					
-					break;
+					System.out.println("Client has recieved:");
+					System.out.println(message);
+					client.startUp = true;
 				case "UPDATE-DENIED":
+					System.out.println("Client has recieved:");
+					System.out.println(message);
 					
 					break;
 					
 				case "SUBJECTS-REJECTED":
+					System.out.println("Client has recieved:");
+					System.out.println(message);
 					
 					break;
 					
+				case "MESSAGE":
+					try {
+						printSem.acquire();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+					System.out.println("you have recieved a new message from user:");
+					System.out.println(splitMessage[1]);
+					System.out.println("about your shared topic of:");
+					System.out.println(splitMessage[2]);
+					System.out.println("message is:");
+					
+					
+					int count = 3;
+					String messageRec = " ";
+					while(count < splitMessage.length) {
+						messageRec = messageRec + " " + splitMessage[count];
+						count = count +1;
+					}
+					
+					System.out.println(messageRec);
+					printSem.release();
 				
+					break;
 				default:
 					System.out.println("server response not reconized");
 				
@@ -102,7 +140,7 @@ public class socketHandler extends Thread{
 	
 	
 	
-	public void registered(DatagramPacket requestPacket) {
+	public void registered(DatagramPacket requestPacket, String splitMessage[]) {
 	
 
 	
@@ -114,7 +152,7 @@ public class socketHandler extends Thread{
 	} 
 	
 	
-	public void updatedApproved(DatagramPacket requestPacket) {
+	public void updatedApproved(DatagramPacket requestPacket,String splitMessage[]) {
 		
 		client.currentHost = requestPacket.getAddress();
 		client.currentPort = requestPacket.getPort();
@@ -122,20 +160,20 @@ public class socketHandler extends Thread{
 	}
 	
 
-	public void updatedDenied(DatagramPacket requestPacket) {
+	public void updatedDenied(DatagramPacket requestPacket, String splitMessage[]) {
 	
 		//TODO
 		
 	}
 	
-	public void subjectsUpdated(DatagramPacket requestPacket) {
+	public void subjectsUpdated(DatagramPacket requestPacket, String splitMessage[]) {
 		
 	
 	}
 	
 	
 	
-	public void deRegister(DatagramPacket requestPacket) {
+	public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
 	
 			
 					client.startUp = true;

@@ -97,6 +97,11 @@ public class Server {
 					case "DE-REGISTER":
 						deRegisterClient(socket, splitMessage, requestPacket);
 						break;
+						
+					
+					case "PUBLISH":
+						publish(socket,splitMessage, requestPacket);
+						break;
 					
 					default:
 						/*for (int i = 0; i < clientHandlers.size(); i++) {
@@ -257,20 +262,109 @@ public class Server {
 		}
 		
 		
+		
 	//TODO: REMOVE DATA FROM THE THING
 		
 	}
 	
+	
+	private void publish(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
+		
+		//first check name of user and subject and make sure subject is in list for the user
+		
+		//if so send message to all other clients that have the same subject
+		
+		Boolean subjectCheck = false;
+		String subject = splitMessage[3].toUpperCase();;
+		String name = splitMessage[2];
+				
+				for (int i = 0; i < clientHandlers.size(); i++) {
+					if (clientHandlers.get(i).getName().equals(name)) {
+						
+						if(clientHandlers.get(i).subjects.contains(subject)) {
+							subjectCheck = true;
+						}
+						
+					}
+					
+				}
+				
+				int count = 4;
+				String messageRec = " ";
+				while(count < splitMessage.length) {
+					messageRec = messageRec + " " + splitMessage[count];
+					count = count +1;
+				}
+				
+	String message = "MESSAGE" + " "+ name + " " + subject + " " + messageRec;
+	byte[] buffer = message.getBytes();
+
+	if(subjectCheck) {
+		for (int i = 0; i < clientHandlers.size(); i++) {
+			if (!(clientHandlers.get(i).getName().equals(name))) {
+				
+				//forward message to all clients tht have that subject in their list and are not the sender
+				if(clientHandlers.get(i).subjects.contains(subject)) {
+					
+					if(isServing) {
+						DatagramPacket response = new DatagramPacket(buffer, buffer.length,clientHandlers.get(i).clientAddress,clientHandlers.get(i).clientPort);
+						
+						try {
+							socket.send(response);
+							
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					
+					
+				}
+				
+			}
+		}
+		
+		
+		
+	}
+	else {
+		if(isServing) {
+			String message1 = "PUBLISH-DENIED " + splitMessage[1] + " couldbeAnything";
+		
+			byte[] buffer1 = message1.getBytes();
+		
+			DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
+		
+			try {
+				socket.send(response1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		
+		
+		
+	}
+				
+				
+	}	
+	}
+	
+	
+	
+	
 	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
 		
-		System.out.print("other requests ");
+		
 		
 		if(clients.contains(name)) {
-			System.out.print("first if ");
+			
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
-					System.out.print("second if: ");
+					
 					clientHandlers.get(i).newPacket(packet);
 					messageFlags.get(i).release();
 				}

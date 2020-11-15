@@ -19,6 +19,7 @@ public class Client {
 	int Port1;
 	int Port2;
 	Semaphore printSem;
+	ArrayList<String> subjects;
 	
 	public InetAddress currentHost;
 	
@@ -105,6 +106,7 @@ public class Client {
 		hostName2 = IP2;
 		Port2 = port2;
 		printSem = new Semaphore(1);
+		subjects = new ArrayList<>();
 	}
 	
 	//client needs localhost 10011 localhost 10012
@@ -138,7 +140,7 @@ public class Client {
 
 	}
 
-	private void service() throws IOException {
+	public void service() throws IOException {
 		Scanner console = new Scanner(System.in);
 		
 		try {
@@ -220,6 +222,10 @@ public class Client {
 				
 			case "SUBJECTS":
 				updateSubjects(socket);
+				break;
+				
+			case "PUBLISH":
+				publish(socket);
 				break;
 			
 			case "ECHO":
@@ -377,6 +383,54 @@ public class Client {
 
 
 		RQ += 1;
+		
+
+	}
+	
+	
+	
+	private void publish(DatagramSocket socket) throws InterruptedException {
+		
+		printSem.acquire();
+		System.out.print("Enter the subject you would like to publish to: ");
+		printSem.release();
+		Scanner console = new Scanner(System.in);
+		String subject = console.nextLine();
+		
+		printSem.acquire();
+		System.out.print("Enter the message you would like to send: ");
+		printSem.release();
+		
+		String message = console.nextLine();
+		
+		
+		if(subjects.contains(subject.toUpperCase())){
+		//have a check here for if the subject is in its thing
+	
+		String sendingMessage = "PUBLISH " + RQ + " " + clientName + " " +subject + " " + message ;
+		System.out.print("CLIENT send: ");
+		System.out.println(sendingMessage);
+
+		byte[] requestbuffer = sendingMessage.getBytes();
+
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
+		try {
+			socket.send(request);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		RQ += 1;
+		}
+		else{
+			printSem.acquire();
+			System.out.print("you are not registered in that interest or it does not exist, please register first ");
+			printSem.release();
+			
+			
+		}
 		
 
 	}

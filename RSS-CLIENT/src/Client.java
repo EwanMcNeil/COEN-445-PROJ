@@ -247,8 +247,16 @@ public class Client {
 		printSem.acquire();
 		System.out.print("Enter your name to register with the server: ");
 		printSem.release();
-		String name = console.nextLine();
-
+		
+		String name = " ";
+		while(true) {
+		if(console.hasNextLine()){
+			name = console.nextLine();
+			break;
+		}
+		}
+		
+		
 		clientName = name;
 		
 		String message1 = "REGISTER " + RQ + " " + name + " " + hostName1 + " " + Port1;

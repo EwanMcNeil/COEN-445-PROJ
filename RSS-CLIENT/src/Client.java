@@ -225,6 +225,8 @@ public class Client {
 			case "ECHO":
 				echo(socket);
 				break;
+			case "SERVING":
+				System.out.println("Client is sending to: " + this.currentHost + this.currentPort);
 				
 			default:
 				System.out.println("Error: This is not a valid command!");

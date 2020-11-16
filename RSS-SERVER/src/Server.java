@@ -11,6 +11,8 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.*; 
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Server {
 
@@ -66,13 +68,39 @@ public class Server {
 			System.out.println("I/O error: " + ex.getMessage());
 		}
 	}
+	
+
+	public void servingTimer(DatagramSocket socket){
+		
+		long howLong = 1000*20; //20min
+		//long howLong = 10000; //10 sec
+		Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+            	System.out.println("Time to stop serving");
+        		changeServer(socket);
+            }
+        }, howLong);
+		
+    }
 
 	private void service() throws IOException {
 		DatagramSocket socket = new DatagramSocket(port);
 //		initializeClients();
-
+		//Start timer for 5 minutes
+		if(isServing) {
+			servingTimer(socket);
+		}
+		
 		while (true) {
 			DatagramPacket requestPacket = null;
+			
+			//If(timer == 0) { 
+			//	tell server2 it is now serving
+			//	send Server2(IP2) and port2 to all clients (CHANGE-SERVER IP_Address Socket#)
+			//	set isServing to false
 			try {
 
 				byte[] clientMessage = new byte[50000];
@@ -97,6 +125,12 @@ public class Server {
 					case "DE-REGISTER":
 						deRegisterClient(socket, splitMessage, requestPacket);
 						break;
+					case "START-SERVING":
+						System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
+						isServing = true;
+						System.out.println("Serving: " + Boolean.valueOf(isServing));
+						servingTimer(socket);
+						break;
 					
 					default:
 						/*for (int i = 0; i < clientHandlers.size(); i++) {
@@ -108,7 +142,8 @@ public class Server {
 					
 						otherRequests(socket, splitMessage, requestPacket);
 						break;
-				} 
+				}
+				
 
 			} catch (Exception e) {
 				//here an exception causes the program to crash if out of bounds
@@ -295,6 +330,41 @@ public class Server {
 				}
 			}
 		}
+	}
+private void changeServer(DatagramSocket socket) {
+		
+		
+		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
+		String message2 = "START-SERVING";
+		
+
+		byte[] buffer = message.getBytes();
+		byte[] buffer2 = message2.getBytes();
+		
+		for (int i = 0; i < clientHandlers.size(); i++) {
+			
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientHandlers.get(i).clientAddress, clientHandlers.get(i).clientPort);
+			
+			try {
+				socket.send(response);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		
+		
+		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+				
+		try {
+			socket.send(ServerResponse);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
+		Server.isServing = false;
+		System.out.println("Serving: " + Boolean.valueOf(isServing));
 	}
 	
 	private static StringBuilder formatMessage(byte[] a) {

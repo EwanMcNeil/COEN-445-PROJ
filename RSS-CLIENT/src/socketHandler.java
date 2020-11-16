@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.Semaphore;
 
 public class socketHandler extends Thread{
@@ -45,7 +47,8 @@ public class socketHandler extends Thread{
 			}
 			
 			System.out.print("Client has recieved:");
-			System.out.print(message);
+			System.out.println(message);
+			System.out.println();
 			
 			
 			printSem.release();
@@ -54,6 +57,9 @@ public class socketHandler extends Thread{
 			
 			
 			String command = splitMessage[0].toUpperCase().replace("_", "-");
+			
+			//System.out.println(splitMessage[0] + splitMessage[1] + splitMessage[2]);
+			System.out.println();
 			
 			switch(command) {
 				case "REGISTERED":
@@ -66,8 +72,7 @@ public class socketHandler extends Thread{
 					
 					
 				case "ECHO":
-					
-					
+
 					break;
 					
 					
@@ -84,6 +89,25 @@ public class socketHandler extends Thread{
 					
 				case "SUBJECTS-REJECTED":
 					
+					break;
+				case "CHANGE-SERVER":
+					System.out.println();
+					System.out.println("Port 1: " + client.Port1 + " " + "Port from message: " + Integer.parseInt(splitMessage[2]));
+					if(client.Port1 == client.currentPort) {
+						client.currentHost = client.hostName2;
+						client.currentPort = client.Port2;
+					}
+					else{
+						client.currentHost = client.hostName1;
+						client.currentPort = client.Port1;
+					}
+					//try {
+						//client.currentHost = InetAddress.getByName(splitMessage[1]);
+						//} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							//e.printStackTrace();
+						//}
+					//client.currentPort = Integer.parseInt(splitMessage[2]);
 					break;
 					
 				
@@ -103,8 +127,6 @@ public class socketHandler extends Thread{
 	
 	
 	public void registered(DatagramPacket requestPacket) {
-	
-
 	
 		client.currentHost = requestPacket.getAddress();
 		client.currentPort = requestPacket.getPort();

@@ -11,7 +11,6 @@ class ClientHandler extends Thread {
 	final DatagramSocket s;
 	Boolean startUp;
 	DatagramPacket request;
-	final int count;
 	int RQ;
 	Server server;
 	String name;
@@ -21,24 +20,22 @@ class ClientHandler extends Thread {
 	ArrayList<String> subjects;
 	
 	// Constructor
-	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server, ArrayList<String> subjects) {
+	public ClientHandler(DatagramSocket s, InetAddress address, int port, Semaphore newMessageFlag, String Name, Server server, ArrayList<String> subjects, boolean startUp) {
 		this.s = s;
-		this.request = request;
-		this.count = count;
+		this.request = null;
 		setName(Name);
 		this.name = Name;
 		this.RQ = 0;
-		startUp = true;
+		this.startUp = startUp;
 		this.server = server;
 		messageFlag = newMessageFlag;
 		this.subjects = subjects;
+		clientAddress = address;
+	    clientPort = port;
 	}
 
 	@Override
 	public void run() {
-		// server can get the info about the client
-		clientAddress = request.getAddress();
-	    clientPort = request.getPort();
 
 		while (true) {
 			try {
@@ -188,9 +185,6 @@ class ClientHandler extends Thread {
 		else {
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
 		}
-		
-		//this.clientAddress = this.request.getAddress();
-		//this.clientPort = this.request.getPort();
 
 		byte[] buffer = message.getBytes();
 		

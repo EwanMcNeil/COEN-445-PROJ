@@ -17,15 +17,14 @@ public class Server {
 	Vector<ClientHandler> clientHandlers = new Vector<>();
 	Vector<Semaphore> messageFlags = new Vector<>();
 	final int port;
-	int clientCount;
 	InetAddress Server2;
 	int Port2;
 	static boolean isServing = false;
 	DatagramSocket socket;
+	static boolean isStarting = true;
 	
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 		this.port = port;
-		clientCount = 0;
 		this.isServing = isServing;
 		Server2 = IP;
 		Port2 = port2;
@@ -50,6 +49,7 @@ public class Server {
 			
 		String Server2_name = args[2];
 		int port2 = Integer.parseInt(args[3]);
+		
 		try {
 			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
 			
@@ -67,8 +67,9 @@ public class Server {
 
 	private void service() throws IOException {
 		socket = new DatagramSocket(port);
-		
-		//initializeClients();
+	
+		if(isStarting)
+			initializeClients();
 		
 		while (true) {
 			DatagramPacket requestPacket = null;
@@ -88,8 +89,6 @@ public class Server {
 				
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
 				String name = splitMessage[2];
-				
-				//initializeClients();
 				
 				switch(command) {
 					case "REGISTER":
@@ -151,24 +150,27 @@ public class Server {
 	}
 	
 	public void initializeClients() throws IOException {
-		//System.out.println("In initializeClients");
 		String file_name = "clients_files_" + String.valueOf(port) + ".txt";
 		
 		File file = new File(file_name);
 		BufferedReader reader;
 		
-		DatagramPacket requestPacket = null;
-		Semaphore messageFlag = new Semaphore(1);
-		messageFlags.add(messageFlag);
 		
 		if(file.exists() &&  !file.isDirectory()) {
+			isStarting = false;
+			System.out.println("File does exist");
+			
 			reader = new BufferedReader(new FileReader(file_name));
 				
 			String line = reader.readLine();
 			String subjects[] = null;
 			
 			while(line != null) {
+				Semaphore messageFlag = new Semaphore(0);
+				messageFlags.add(messageFlag);
+				
 				String splitLine[] = line.split(" ");
+			
 				
 				if(line.contains(",")) {
 					subjects = splitLine[2].split(",");
@@ -189,16 +191,18 @@ public class Server {
 				ClientHandler client;
 				ArrayList<String> sub = new ArrayList<>();
 				
-				/*if(subjects.length > 0)
-					client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects));
-				else
-					client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, sub);*/
+				if(splitLine.length > 4) {
+					client = new ClientHandler(socket, InetAddress.getByName(splitLine[3].replace("/", "")), Integer.parseInt(splitLine[4]), messageFlag, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects), false);
+				}
+					
+				else {
+					client = new ClientHandler(socket, InetAddress.getByName(splitLine[2].replace("/", "")), Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false);
+				}
+					
 				
-				//client.start();
+				client.start();
 				
-				//clientHandlers.add(client);
-				
-				
+				clientHandlers.add(client);
 				
 				line = reader.readLine();
 			}
@@ -206,11 +210,15 @@ public class Server {
 			reader.close();
 
 		}
+		
+		else {
+			System.out.println("File does not exist");
+			return;
+		}
 			
 	}
 	
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
-		
 		String name = splitMessage[2];
 		ArrayList<String> subjects = new ArrayList<>();
 		ArrayList<String> clients_name = new ArrayList<>();
@@ -219,16 +227,17 @@ public class Server {
 			clients_name.add(clientHandler.name);
 		
 		if (!(clients_name.contains(name))) {
-			Semaphore messageFlag = new Semaphore(1);
+			Semaphore messageFlag = new Semaphore(0);
 			
 			messageFlags.add(messageFlag);
 			
-			ClientHandler t = new ClientHandler(socket, packet, messageFlag, clientCount, name, this, subjects);
-
-			clientCount += 1;
+			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this, subjects, true);
 			
 			// Invoking the start() method
 			t.start();
+			
+			t.newPacket(packet);
+			messageFlag.release();
 
 			clientHandlers.add(t);
 		} 
@@ -269,8 +278,6 @@ public class Server {
 				clientHandlers.get(i).stop();
 				clientHandlers.remove(i);
 				messageFlags.remove(i);
-				
-				clientCount -= 1;
 
 				writeClientsFiles();
 			}
@@ -302,8 +309,6 @@ public class Server {
 		
 		for(ClientHandler clientHandler : clientHandlers)
 			clients_name.add(clientHandler.name);
-		
-		//initializeClients();
 		
 		if(clients_name.contains(name)) {
 			for (int i = 0; i < clientHandlers.size(); i++) {

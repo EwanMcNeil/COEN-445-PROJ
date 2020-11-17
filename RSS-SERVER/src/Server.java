@@ -50,18 +50,14 @@ public class Server {
 			
 		String Server2_name = args[2];
 		int port2 = Integer.parseInt(args[3]);
-
 		try {
 			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
 			
 			System.out.println("Server listening on port " + port);
 			System.out.println("Serving: " + Boolean.valueOf(isServing));
 			
-			//initializeClients();
-			
 			server.service();
 			
-
 		} catch (SocketException ex) {
 			System.out.println("Socket error: " + ex.getMessage());
 		} catch (IOException ex) {
@@ -93,7 +89,7 @@ public class Server {
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
 				String name = splitMessage[2];
 				
-				initializeClients();
+				//initializeClients();
 				
 				switch(command) {
 					case "REGISTER":
@@ -117,12 +113,12 @@ public class Server {
 		}
 	}
 	
-	public void writeClientsFile() {
+	public void writeClientsFiles() {
 		FileWriter writer;
 		String output = "";
 		
 		try {
-			writer = new FileWriter("clients_files.txt");
+			writer = new FileWriter("clients_files_" + String.valueOf(port) + ".txt");
 			
 			for(int j = 0; j < clientHandlers.size(); j++) {
 				ArrayList<String> subjects_list = clientHandlers.get(j).subjects;
@@ -155,15 +151,16 @@ public class Server {
 	}
 	
 	public void initializeClients() throws IOException {
-		System.out.println("In initializeClients");
-		String file_name = "clients_files.txt";
+		//System.out.println("In initializeClients");
+		String file_name = "clients_files_" + String.valueOf(port) + ".txt";
 		
 		File file = new File(file_name);
 		BufferedReader reader;
 		
 		DatagramPacket requestPacket = null;
 		Semaphore messageFlag = new Semaphore(1);
-
+		messageFlags.add(messageFlag);
+		
 		if(file.exists() &&  !file.isDirectory()) {
 			reader = new BufferedReader(new FileReader(file_name));
 				
@@ -177,7 +174,6 @@ public class Server {
 					subjects = splitLine[2].split(",");
 				}
 					
-				
 				System.out.print("splitLine: ");
 				for(String s : splitLine)
 					System.out.print(s + " ");
@@ -190,11 +186,17 @@ public class Server {
 					System.out.println("");
 				}*/
 				
-				/**ClientHandler client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects));
+				ClientHandler client;
+				ArrayList<String> sub = new ArrayList<>();
 				
-				client.start();
+				/*if(subjects.length > 0)
+					client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects));
+				else
+					client = new ClientHandler(socket, requestPacket, messageFlag, clientCount, splitLine[0], this, sub);*/
 				
-				clientHandlers.add(client);*/
+				//client.start();
+				
+				//clientHandlers.add(client);
 				
 				
 				
@@ -270,7 +272,7 @@ public class Server {
 				
 				clientCount -= 1;
 
-				writeClientsFile();
+				writeClientsFiles();
 			}
 		}
 		

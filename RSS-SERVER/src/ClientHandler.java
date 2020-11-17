@@ -60,10 +60,13 @@ class ClientHandler extends Thread {
 						
 							switch(command) {
 								case "UPDATE":
+								case "UPDATE-CONFIRMED":
 									updateClient(splitMessage);
 									break;
 								
 								case "SUBJECTS":
+								case "SUBJECTS-UPDATED":
+								case "SUBJECTS-REJECTED":
 									updateSubjects(clientAddress, clientPort, splitMessage);
 									break;
 									
@@ -105,7 +108,7 @@ class ClientHandler extends Thread {
 		startUp = false;
 		RQ += 1;
 		
-		server.writeClientsFile();
+		server.writeClientsFiles();
 	}
 	
 	private void updateClient(String splitMessage[]) {
@@ -135,7 +138,7 @@ class ClientHandler extends Thread {
 		
 		RQ += 1;
 		
-		server.writeClientsFile();
+		server.writeClientsFiles();
 	}
 	
 	private void updateSubjects(InetAddress clientAddress, int clientPort, String splitMessage[]) {
@@ -143,9 +146,10 @@ class ClientHandler extends Thread {
 		String message = "";
 		String subjects_sent = "";
 		boolean all_in = true;
-		String new_subjects  = "";
 		
 		splitMessage = Arrays.copyOfRange(splitMessage, 3, splitMessage.length);
+		
+		subjects.clear();
 		
 		for(String subject : splitMessage) {
 			subjects_sent += subject.toUpperCase() + " ";
@@ -160,11 +164,7 @@ class ClientHandler extends Thread {
 			}
 			
 			else {
-				if(!subjects.contains(subject)) {
-					new_subjects += subject + " ";
-					subjects.add(subject);
-				}
-
+				subjects.add(subject);
 			}
 		}
 		
@@ -189,8 +189,8 @@ class ClientHandler extends Thread {
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
 		}
 		
-		this.clientAddress = this.request.getAddress();
-		this.clientPort = this.request.getPort();
+		//this.clientAddress = this.request.getAddress();
+		//this.clientPort = this.request.getPort();
 
 		byte[] buffer = message.getBytes();
 		
@@ -211,7 +211,7 @@ class ClientHandler extends Thread {
 		
 		RQ += 1;
 		
-		server.writeClientsFile();
+		server.writeClientsFiles();
 	}
 	
 	private void echoClient(InetAddress clientAddress, int clientPort) {

@@ -114,19 +114,16 @@ public class Client {
 	
 	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
 		Scanner console = new Scanner(System.in);
-		String input;
 
 		while (true) {
 			System.out.print("Enter the next command to be sent: ");
 
-			input = console.nextLine();
-
-			String splitInput[] = input.split(" ");
-
-			String command = splitInput[0].toUpperCase().replace("_", "-");
+			String input = console.nextLine();
+			
+			input = input.toUpperCase().replace("_", "-");
 			
 			// case statement of input and sending to server
-			switch (command) {
+			switch (input) {
 
 			case "DE-REGISTER":
 				deRegisterClient(socket);

@@ -74,7 +74,7 @@ public class Server {
 
 	public void servingTimer(DatagramSocket socket){
 		
-		long howLong = 1000*20; //20min
+		long howLong = 1000*60; //20min
 		//long howLong = 10000; //10 sec
 		Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -88,29 +88,7 @@ public class Server {
 		
     }
 	
-	 public class NotServingThread extends Thread {
-
-		    public void run(DatagramSocket socket){
-		    	String input;
-				Scanner console = new Scanner(System.in);
-		    	System.out.print("Enter the next command to be sent: (UPDATE-SERVER)");
-		    	
-				input = console.nextLine();
-
-				String splitInput[] = input.split(" ");
-
-				String command = splitInput[0].toUpperCase().replace("_", "-");
-				if(command == "UPDATE-SERVER" && splitInput.length == 3) {
-					updateServer(socket,splitInput);
-				}
-				else {
-					System.out.println("Invalid command!");
-				}
-				if(isServing) {
-					Thread.interrupted();
-				}
-		    }
-		  }
+	 
 
 	private void service() throws IOException {
 		DatagramSocket socket = new DatagramSocket(port);
@@ -119,10 +97,10 @@ public class Server {
 		if(isServing) {
 			servingTimer(socket);
 		}
-		
 		else if(isServing == false) {
-				NotServingThread thread = new NotServingThread();
-				thread.run(socket);
+				NotServingThread thread = new NotServingThread(this, socket);
+				thread.start();
+				
 			}
 		while (true) {
 			DatagramPacket requestPacket = null;
@@ -131,7 +109,7 @@ public class Server {
 
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
-
+				System.out.print("Waiting on socket");
 				socket.receive(requestPacket);
 
 				String message = formatMessage(clientMessage).toString();
@@ -410,12 +388,12 @@ private void changeServer(DatagramSocket socket) {
 		
 		Server.isServing = false;
 		System.out.println("Serving: " + Boolean.valueOf(isServing));
-		NotServingThread thread = new NotServingThread();
-		thread.run(socket);
+		NotServingThread thread = new NotServingThread(this,socket);
+		thread.start();
 	}
 
 
-private void updateServer(DatagramSocket socket, String[] input) {
+public void updateServer(DatagramSocket socket, String[] input) {
 	
 	System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
 	
@@ -449,6 +427,10 @@ private void updateServer(DatagramSocket socket, String[] input) {
 
 
 }
+
+
+
+
 
 
 

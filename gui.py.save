@@ -1,0 +1,29 @@
+import subprocess
+
+import os
+import signal
+import subprocess
+import PySimpleGUI as sg
+
+layout = [[sg.Text("Hello from PySimpleGUI")], [sg.Button("Register")]]
+
+# Create the window
+window = sg.Window("Demo", layout)
+
+process = subprocess.Popen('java -jar Client.jar localhost 10011 localhost 10012', shell = True)
+# Create an event loop
+stdout, stderr = process.communicate()
+while True:
+    event, values = window.read()
+    # End program if user closes window or
+    # presses the OK button
+    if event == "register":
+       #process.communicate(input = 'register')
+       #process.communicate(input='\n')
+       #print("register")
+       #print("/n")
+       os.system("register")
+    if event == sg.WIN_CLOSED:
+        os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+window.close()
+

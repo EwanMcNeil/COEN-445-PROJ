@@ -18,6 +18,7 @@ class ClientHandler extends Thread {
 	Semaphore messageFlag;
 	InetAddress clientAddress;
 	int clientPort;
+	ArrayList<String> subjects;
 	
 	// Constructor
 	public ClientHandler(DatagramSocket s, DatagramPacket request, Semaphore newMessageFlag,  int count, String Name, Server server) {
@@ -30,6 +31,7 @@ class ClientHandler extends Thread {
 		startUp = true;
 		this.server = server;
 		messageFlag = newMessageFlag;
+		subjects = new ArrayList<>();
 	}
 
 	@Override
@@ -59,7 +61,7 @@ class ClientHandler extends Thread {
 				else {
 					if (name.equals(this.getName())) {
 						
-						System.out.print("loop if");
+						
 						String command = splitMessage[0].toUpperCase().replace("_", "-");
 						
 							switch(command) {
@@ -148,6 +150,7 @@ class ClientHandler extends Thread {
 		String message = "";
 		String subjects_sent = "";
 		boolean all_in = true;
+		String new_subjects  = "";
 		
 		splitMessage = Arrays.copyOfRange(splitMessage, 3, splitMessage.length);
 		
@@ -162,13 +165,21 @@ class ClientHandler extends Thread {
 				all_in = false;
 				break;
 			}
+			else {
+				if(!subjects.contains(subject)) {
+					new_subjects += subject + " ";
+					subjects.add(subject);
+				}
+				
+			}
 		}
 		
-		if(all_in)
+		if(all_in) {
 			message = "SUBJECTS-UPDATED " + RQ + " " + getName() + " " + subjects_sent;
-		else
+		}	
+		else {
 			message  = "SUBJECTS-REJECTED " + RQ + " " + getName() + " " + subjects_sent;
-		
+		}
 		//System.out.print("Server sends: ");
 		//System.out.println(message);
 		
@@ -200,7 +211,7 @@ class ClientHandler extends Thread {
 		
 		//System.out.print("Server sends: ");
 		//System.out.println(message);
-		System.out.print("echocall");
+		
 		byte[] buffer = message.getBytes();
 		
 		if(server.isServing) {

@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.concurrent.Semaphore;
 
@@ -91,23 +92,23 @@ public class socketHandler extends Thread{
 					
 					break;
 				case "CHANGE-SERVER":
-					System.out.println();
 					System.out.println("Port 1: " + client.Port1 + " " + "Port from message: " + Integer.parseInt(splitMessage[2]));
-					if(client.Port1 == client.currentPort) {
-						client.currentHost = client.hostName2;
-						client.currentPort = client.Port2;
+					try {
+						if(splitMessage[1].contains("/")) {
+							String hostName[] = splitMessage[1].split("/");
+							client.currentHost = InetAddress.getByName(hostName[1]);
+						}
+						else {
+							System.out.println("hiiii "+ splitMessage[1].getBytes());
+							client.currentHost = InetAddress.getByName(splitMessage[1]);
+						}
+						
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					else{
-						client.currentHost = client.hostName1;
-						client.currentPort = client.Port1;
-					}
-					//try {
-						//client.currentHost = InetAddress.getByName(splitMessage[1]);
-						//} catch (UnknownHostException e) {
-							// TODO Auto-generated catch block
-							//e.printStackTrace();
-						//}
-					//client.currentPort = Integer.parseInt(splitMessage[2]);
+					
+					client.currentPort = Integer.parseInt(splitMessage[2]);
 					break;
 					
 				

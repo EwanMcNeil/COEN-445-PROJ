@@ -8,7 +8,9 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.Vector;
 import java.util.concurrent.*; 
 import java.util.Timer;
@@ -19,7 +21,7 @@ public class Server {
 	ArrayList<String> clients;
 	Vector<ClientHandler> clientHandlers = new Vector<>();
 	Vector<Semaphore> messageFlags = new Vector<>();
-	final int port;
+	int port;
 	int clientCount;
 	InetAddress Server2;
 	int Port2;
@@ -85,6 +87,30 @@ public class Server {
         }, howLong);
 		
     }
+	
+	 public class NotServingThread extends Thread {
+
+		    public void run(DatagramSocket socket){
+		    	String input;
+				Scanner console = new Scanner(System.in);
+		    	System.out.print("Enter the next command to be sent: (UPDATE-SERVER)");
+		    	
+				input = console.nextLine();
+
+				String splitInput[] = input.split(" ");
+
+				String command = splitInput[0].toUpperCase().replace("_", "-");
+				if(command == "UPDATE-SERVER" && splitInput.length == 3) {
+					updateServer(socket,splitInput);
+				}
+				else {
+					System.out.println("Invalid command!");
+				}
+				if(isServing) {
+					Thread.interrupted();
+				}
+		    }
+		  }
 
 	private void service() throws IOException {
 		DatagramSocket socket = new DatagramSocket(port);
@@ -94,13 +120,13 @@ public class Server {
 			servingTimer(socket);
 		}
 		
+		else if(isServing == false) {
+				NotServingThread thread = new NotServingThread();
+				thread.run(socket);
+			}
 		while (true) {
 			DatagramPacket requestPacket = null;
 			
-			//If(timer == 0) { 
-			//	tell server2 it is now serving
-			//	send Server2(IP2) and port2 to all clients (CHANGE-SERVER IP_Address Socket#)
-			//	set isServing to false
 			try {
 
 				byte[] clientMessage = new byte[50000];
@@ -115,7 +141,6 @@ public class Server {
 				System.out.println(message);
 				
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
-				String name = splitMessage[2];
 				
 				switch(command) {
 					case "REGISTER":
@@ -131,6 +156,25 @@ public class Server {
 						System.out.println("Serving: " + Boolean.valueOf(isServing));
 						servingTimer(socket);
 						break;
+					case "UPDATE-SERVER":
+						try {
+							if(splitMessage[1].contains("/")) {
+								String hostName[] = splitMessage[1].split("/");
+								Server2 = InetAddress.getByName(hostName[1]);
+							}
+							else {
+								System.out.println("hiiii "+ splitMessage[1].getBytes());
+								Server2 = InetAddress.getByName(splitMessage[1]);
+							}
+							
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						
+						Port2 = Integer.parseInt(splitMessage[2]);
+						break;
+						
 					
 					default:
 						/*for (int i = 0; i < clientHandlers.size(); i++) {
@@ -335,6 +379,7 @@ private void changeServer(DatagramSocket socket) {
 		
 		
 		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
+		System.out.println(Server2);
 		String message2 = "START-SERVING";
 		
 
@@ -365,7 +410,29 @@ private void changeServer(DatagramSocket socket) {
 		
 		Server.isServing = false;
 		System.out.println("Serving: " + Boolean.valueOf(isServing));
+		NotServingThread thread = new NotServingThread();
+		thread.run(socket);
 	}
+
+
+private void updateServer(DatagramSocket socket, String[] input) {
+	
+	System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
+	
+	port = Integer.parseInt(input[2]);
+	String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
+	
+	byte[] buffer2 = message2.getBytes();
+	
+	DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+			
+	try {
+		socket.send(ServerResponse);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+}
 	
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)

@@ -31,6 +31,7 @@ public class Server {
 	DatagramSocket socket;
 	static boolean isStarting = true;
 	
+	
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 		this.port = port;
 		this.isServing = isServing;
@@ -94,8 +95,11 @@ public class Server {
 
 	private void service() throws IOException {
 
-		DatagramSocket socket = new DatagramSocket(port);
-//		initializeClients();
+		socket = new DatagramSocket(port);
+		if(isStarting) {
+		initializeClients();
+		
+		}
 		//Start timer for 5 minutes
 		if(isServing) {
 			servingTimer(socket);

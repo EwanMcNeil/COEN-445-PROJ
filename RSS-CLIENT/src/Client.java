@@ -183,8 +183,6 @@ public class Client {
 				} else {
 					commandInput(socket);
 				}
-
-				//Thread.sleep(10000);
 			}
 
 		} catch (SocketTimeoutException ex) {
@@ -200,19 +198,19 @@ public class Client {
 	
 	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
 		Scanner console = new Scanner(System.in);
-		String input;
 
 		while (true) {
 			printSem.acquire();
 			System.out.print("Enter the next command to be sent: ");
 
+
 			printSem.release();
-			input = console.nextLine();
+			String input = console.nextLine();
 
 			String splitInput[] = input.split(" ");
 
 			String command = splitInput[0].toUpperCase().replace("_", "-");
-			
+
 			// case statement of input and sending to server
 			switch (command) {
 
@@ -254,14 +252,10 @@ public class Client {
 		clientName = name;
 		
 		String message1 = "REGISTER " + RQ + " " + name + " " + hostName1 + " " + Port1;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(message1);
 
 		byte[] requestbuffer1 = message1.getBytes();
 		
 		String message2 = "REGISTER " + RQ + " " + name + " " + hostName2 + " " + Port2;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(message2);
 
 		byte[] requestbuffer2 = message2.getBytes();
 
@@ -289,8 +283,6 @@ public class Client {
 	private void deRegisterClient(DatagramSocket socket) {
 
 		String sendingMessage = "DE-REGISTER " + RQ + " " + clientName;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(sendingMessage);
 
 		byte[] requestbuffer = sendingMessage.getBytes();
 
@@ -304,6 +296,7 @@ public class Client {
 		}
 
 		
+
 	}
 	
 	private void updateClient(DatagramSocket socket) throws InterruptedException {
@@ -318,14 +311,10 @@ public class Client {
 		clientName = name;
 		
 		String message1 = "UPDATE " + RQ + " " + name + " " + hostName1 + " " + Port1;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(message1);
 
 		byte[] requestbuffer1 = message1.getBytes();
 		
 		String message2 = "UPDATE " + RQ + " " + name + " " + hostName2 + " " + Port2;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(message2);
 
 		byte[] requestbuffer2 = message2.getBytes();
 
@@ -368,8 +357,6 @@ public class Client {
 		
 
 		String sendingMessage = "SUBJECTS " + RQ + " " + clientName + " " + subjects_sent;
-		//System.out.print("CLIENT sends: ");
-		//System.out.println(sendingMessage);
 
 		byte[] requestbuffer = sendingMessage.getBytes();
 

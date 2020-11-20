@@ -335,11 +335,15 @@ public class Server {
 		//if so send message to all other clients that have the same subject
 		
 		Boolean subjectCheck = false;
-		String subject = splitMessage[3].toUpperCase();;
+		String subject = splitMessage[3].toUpperCase();
 		String name = splitMessage[2];
+	
+		System.out.print(splitMessage);
 				
+		
+				//this is checking for the sending server is in the register for subject
 				for (int i = 0; i < clientHandlers.size(); i++) {
-					if (clientHandlers.get(i).getName().equals(name)) {
+					if (clientHandlers.get(i).name.equals(name)) {
 						
 						if(clientHandlers.get(i).subjects.contains(subject)) {
 							subjectCheck = true;
@@ -359,9 +363,11 @@ public class Server {
 	String message = "MESSAGE" + " "+ name + " " + subject + " " + messageRec;
 	byte[] buffer = message.getBytes();
 
+	
+	//goes through hthe rest of them
 	if(subjectCheck) {
 		for (int i = 0; i < clientHandlers.size(); i++) {
-			if (!(clientHandlers.get(i).getName().equals(name))) {
+			if (!(clientHandlers.get(i).name.equals(name))) {
 				
 				//forward message to all clients tht have that subject in their list and are not the sender
 				if(clientHandlers.get(i).subjects.contains(subject)) {

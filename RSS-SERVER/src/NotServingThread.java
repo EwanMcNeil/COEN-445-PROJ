@@ -10,7 +10,7 @@ public class NotServingThread extends Thread {
 			
 			this.server = server;
 			this.socket = socket;
-			System.out.print("notServingThreadCreated");
+			
 		}
 		
 			

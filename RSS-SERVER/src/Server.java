@@ -116,13 +116,14 @@ public class Server {
 			try {
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
-				System.out.print("Waiting on socket");
+				
 				socket.receive(requestPacket);
 
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
 				
+				System.out.print("Server has Recieved: ");
 				System.out.println(message);
 				
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
@@ -149,7 +150,7 @@ public class Server {
 								Server2 = InetAddress.getByName(hostName[1]);
 							}
 							else {
-								System.out.println("hiiii "+ splitMessage[1].getBytes());
+								
 								Server2 = InetAddress.getByName(splitMessage[1]);
 							}
 							
@@ -248,10 +249,10 @@ public class Server {
 					subjects = splitLine[2].split(",");
 				}
 					
-				System.out.print("splitLine: ");
+				
 				for(String s : splitLine)
 					System.out.print(s + " ");
-				System.out.println("");
+				
 				
 				/*if(subjects.length != 0) {
 					System.out.print("subjects: ");
@@ -349,7 +350,7 @@ public class Server {
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
 				
-				System.out.println("found the one to delete " + name );
+				
 				RQ = clientHandlers.get(i).RQ;
 				
 				clientHandlers.get(i).stop();
@@ -400,7 +401,7 @@ public class Server {
 		String subject = splitMessage[3].toUpperCase();
 		String name = splitMessage[2];
 	
-		System.out.print(splitMessage);
+	
 				
 		
 				//this is checking for the sending server is in the register for subject

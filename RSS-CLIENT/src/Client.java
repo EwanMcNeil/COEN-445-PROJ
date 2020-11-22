@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
 
@@ -20,6 +21,19 @@ public class Client {
 	int Port2;
 	Semaphore printSem;
 	ArrayList<String> subjects;
+	Semaphore echoSem;
+	Semaphore publishSem;
+	Semaphore upSubSem;
+	Semaphore upClientSem;
+	Semaphore regClientSem;
+	Semaphore deRegClientSem;
+	boolean registered;
+	boolean updated;
+	boolean deRegistered;
+	boolean subjectsBool;
+	boolean clientUpdate;
+	
+	
 	
 	public InetAddress currentHost;
 	
@@ -107,6 +121,18 @@ public class Client {
 		Port2 = port2;
 		printSem = new Semaphore(1);
 		subjects = new ArrayList<>();
+		
+		echoSem = new Semaphore(0);
+		publishSem = new Semaphore(0);
+		upSubSem = new Semaphore(0);
+		upClientSem = new Semaphore(0);
+		regClientSem = new Semaphore(0);
+		deRegClientSem = new Semaphore(0);
+		registered = false;
+		updated = false;
+		deRegistered = false;
+		subjectsBool = false;
+		
 	}
 	
 	//client needs localhost 10011 localhost 10012
@@ -201,7 +227,7 @@ public class Client {
 
 		while (true) {
 			printSem.acquire();
-			System.out.print("Enter the next command to be sent: ");
+			System.out.print("Enter the next command to be sent or enter HELP: ");
 
 
 			printSem.release();
@@ -225,12 +251,28 @@ public class Client {
 			case "PUBLISH":
 				publish(socket);
 				break;
+				
+			case "UPDATE":
+				updateClient(socket);
+				break;
 			
 			case "ECHO":
 				echo(socket);
 				break;
 			case "SERVING":
 				System.out.println("Client is sending to: " + this.currentHost + this.currentPort);
+				break;
+				
+			case "HELP":
+				System.out.println("The current commands you can send are: ");
+				System.out.println("DE-REGSITER");
+				System.out.println("SUBJECTS");
+				System.out.println("PUBLISH");
+				System.out.println("UPDATE");
+				System.out.println("ECHO");
+				System.out.println("SERVING");
+				break;
+				
 				
 			default:
 				System.out.println("Error: This is not a valid command!");
@@ -241,7 +283,7 @@ public class Client {
 
 	}
 	
-	private void registerClient(DatagramSocket socket) throws InterruptedException {
+	private void registerClient(DatagramSocket socket) throws InterruptedException, IOException {
 		Scanner console = new Scanner(System.in);
 		
 		printSem.acquire();
@@ -276,11 +318,33 @@ public class Client {
 			e.printStackTrace();
 		}
 
-
-
+		
+		
+		 boolean acquired = regClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		 if (!acquired) {
+			 System.out.println("Server Has failed to respond please retry or reconnect " );
+			 startUp = true;
+			 try {
+				service();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 }
+		 else {
+			 if(registered) {
+				 System.out.println("Registration is good, you may proceed" );
+			 }
+			 else {
+				 System.out.println("Please try to register again" );
+				 startUp = true;
+				 service();
+			 }
+		 }
+        
 	}
 
-	private void deRegisterClient(DatagramSocket socket) {
+	private void deRegisterClient(DatagramSocket socket) throws InterruptedException {
 
 		String sendingMessage = "DE-REGISTER " + RQ + " " + clientName;
 
@@ -295,6 +359,11 @@ public class Client {
 			e.printStackTrace();
 		}
 
+		 boolean acquired = deRegClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		 if (!acquired) {
+			 System.out.println("Server Has failed to respond please retry or reconnect " );
+			
+		 }
 		
 
 	}
@@ -335,6 +404,25 @@ public class Client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		 boolean acquired = upClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		 if (!acquired) {
+			 System.out.println("Server Has failed to respond please retry or reconnect " );
+			 startUp = true;
+			 try {
+				service();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 }
+		 
+		 if(clientUpdate) {
+			 System.out.println("Update Sucessful please continue " );
+		 }
+		 else {
+			 System.out.println("Update not Sucessful please try again" );
+		 }
 
 	
 	}
@@ -370,6 +458,11 @@ public class Client {
 		}
 		
 
+		 boolean acquired = upSubSem.tryAcquire(60, TimeUnit.SECONDS);
+		 if (!acquired) {
+			 System.out.println("Server Has failed to respond please retry or reconnect " );
+			
+		 }
 
 		RQ += 1;
 		
@@ -449,8 +542,23 @@ public class Client {
 		}
 		
 		RQ += 1;
+		
+		 boolean acquired = echoSem.tryAcquire(60, TimeUnit.SECONDS);
+		 if (!acquired) {
+			 System.out.println("Server Has failed to respond please retry or reconnect " );
+			
+		 }
 
 	}
+	
+	
+	/**
+	 * Wait for the lock to release
+	 * @param semp Lock object
+	 * @return Whether it is overtime
+	 */
+
+	
 }
 
 

@@ -10,10 +10,20 @@ public class socketHandler extends Thread{
 	DatagramSocket socket;
 	Client client;
 	Semaphore printSem;
+	Semaphore echoSem;
+	Semaphore publishSem;
+	Semaphore upSubSem;
+	Semaphore upClientSem;
+	Semaphore regClientSem;
 	public socketHandler(DatagramSocket s, Client c, Semaphore Sem) {
 		this.socket = s;
 		this.client = c;
 		this.printSem = Sem;
+		this.echoSem = c.echoSem;
+		this.publishSem = c.publishSem;
+		this.upSubSem = c.upSubSem;
+		this.upClientSem = c.upClientSem;
+		this.regClientSem = c.regClientSem;
 		
 	}
 	
@@ -48,10 +58,6 @@ public class socketHandler extends Thread{
 			}
 			
 
-			System.out.print("Client has recieved:");
-			System.out.println(message);
-			System.out.println();
-
 			
 			
 			printSem.release();
@@ -67,23 +73,24 @@ public class socketHandler extends Thread{
 			switch(command) {
 				case "REGISTERED":
 					System.out.println("Client has recieved:");
-					System.out.println(message);
+					System.out.print(message);
 					registered(packet, splitMessage);
+					client.registered = true;
+					regClientSem.release();
 					break;
 					
 				case "DE-REGISTER":
 					System.out.println("Client has recieved:");
-					System.out.println(message);
+					System.out.print(message);
 					deRegister(packet, splitMessage);
+					client.deRegClientSem.release();
 					break;
 					
 					
 				case "ECHO":
 					System.out.println("Client has recieved echo :");
-					System.out.println(message);
-					
-					
-
+					System.out.print(message);
+					echoSem.release();
 					break;
 					
 					
@@ -92,12 +99,26 @@ public class socketHandler extends Thread{
 					client.subjects.add(splitMessage[3]);
 					System.out.println(message);
 					subjectsUpdated(packet, splitMessage);
+					client.subjectsBool = true;
+					upSubSem.release();
 					break;
 					
 				case "REGISTER-DENIED":
 					System.out.println("Client has recieved:");
 					System.out.println(message);
-					client.startUp = true;
+					client.registered = false;
+					regClientSem.release();
+					break;
+					
+				case "UPDATE-CONFIRMED":
+					System.out.println("Client has recieved:");
+					System.out.println(message);
+					updatedApproved(packet, splitMessage);
+					client.clientUpdate = true;
+					upClientSem.release();
+				break;
+					
+					
 				case "UPDATE-DENIED":
 					System.out.println("Client has recieved:");
 					System.out.println(message);
@@ -107,6 +128,8 @@ public class socketHandler extends Thread{
 				case "SUBJECTS-REJECTED":
 					System.out.println("Client has recieved:");
 					System.out.println(message);
+					client.subjectsBool = false;
+					upSubSem.release();
 					
 					break;
 				case "CHANGE-SERVER":

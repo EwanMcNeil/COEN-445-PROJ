@@ -23,6 +23,7 @@ import java.util.TimerTask;
 public class Server {
 	Vector<ClientHandler> clientHandlers = new Vector<>();
 	Vector<Semaphore> messageFlags = new Vector<>();
+	InetAddress Address;
 	int port;
 	int clientCount;
 	InetAddress Server2;
@@ -30,9 +31,16 @@ public class Server {
 	static boolean isServing = false;
 	DatagramSocket socket;
 	static boolean isStarting = true;
+	static boolean goodToChange = false;
 	
 	
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
+		try {
+			Address = InetAddress.getByName("localhost");
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.port = port;
 		this.isServing = isServing;
 		Server2 = IP;
@@ -77,7 +85,7 @@ public class Server {
 
 	public void servingTimer(DatagramSocket socket){
 		
-		long howLong = 1000*60; //20min
+		long howLong = 1000*20; //1min
 		//long howLong = 10000; //10 sec
 		Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -85,7 +93,31 @@ public class Server {
             @Override
             public void run() {
             	System.out.println("Time to stop serving");
-        		changeServer(socket);
+            	requestChanging(socket);
+            	
+            }
+        }, howLong);
+		
+    }
+	
+public void timeToServeThreadRequest(DatagramSocket socket){
+		
+		long howLong = 1000*5; //5sec
+		//long howLong = 10000; //10 sec
+		Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+
+			@Override
+            public void run() {
+            	if(goodToChange) {
+            		System.out.println("Changing Server");
+            		changeServer(socket);
+            	}
+            	else {
+            		System.out.println("Changing Resquest not received, will continue serving");
+            		servingTimer(socket);
+            	}
+        		
             }
         }, howLong);
 		
@@ -104,7 +136,7 @@ public class Server {
 		if(isServing) {
 			servingTimer(socket);
 		}
-		else if(isServing == false) {
+		else if(isServing == false && isStarting) {
 				NotServingThread thread = new NotServingThread(this, socket);
 				thread.start();
 				
@@ -168,8 +200,15 @@ public class Server {
 					case "PUBLISH":
 						publish(socket,splitMessage, requestPacket);
 						break;
-
-					
+						
+					case "READY-TO-CHANGE":
+						readyToChange(socket);
+						break;
+					case "CHANGE-REQUEST-RECEIVED":
+						goodToChange = true;
+						break;
+						
+						
 					default:
 
 						otherRequests(socket, splitMessage, requestPacket);
@@ -566,7 +605,23 @@ public void updateServer(DatagramSocket socket, String[] input) {
 	
 	System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
 	
+	
+	try {
+		if(input[1].contains("/")) {
+			String hostName[] = input[1].split("/");
+			Address = InetAddress.getByName(hostName[1]);
+		}
+		else {
+			Address = InetAddress.getByName(input[1]);
+		}
+		
+	} catch (UnknownHostException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+
 	port = Integer.parseInt(input[2]);
+
 	String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
 	
 	byte[] buffer2 = message2.getBytes();
@@ -579,6 +634,49 @@ public void updateServer(DatagramSocket socket, String[] input) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	try {
+		this.service();
+	} catch (IOException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+}
+
+public void requestChanging(DatagramSocket socket) {
+	
+	String message2 = "READY-TO-CHANGE";
+	
+	byte[] buffer2 = message2.getBytes();
+	
+	DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+			
+	try {
+		socket.send(ServerResponse);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	System.out.println("Request to change sent to: IP: " + Server2 + "Post: " + Port2);
+	goodToChange= false;
+	timeToServeThreadRequest(socket);
+}
+
+
+public void readyToChange(DatagramSocket socket) {
+	
+	String message2 = "CHANGE-REQUEST-RECEIVED";
+	
+	byte[] buffer2 = message2.getBytes();
+	
+	DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+			
+	try {
+		socket.send(ServerResponse);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
 }
 	
 	private static StringBuilder formatMessage(byte[] a) {

@@ -10,13 +10,10 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-
 import java.util.Scanner;
-
 import java.util.Arrays;
-
 import java.util.Vector;
-import java.util.concurrent.*; 
+import java.util.concurrent.*;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,8 +27,7 @@ public class Server {
 	static boolean isServing = false;
 	DatagramSocket socket;
 	static boolean isStarting = true;
-	
-	
+
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 		this.port = port;
 		this.isServing = isServing;
@@ -40,298 +36,278 @@ public class Server {
 	}
 
 	// Main function starts up server
-	//server needs 10011 1 localhost 10012
+	// server needs 10011 1 localhost 10012
 	public static void main(String[] args) {
 		if (args.length < 4) {
 			System.out.println("Missing Input");
 			return;
 		}
 
-		
 		int port = Integer.parseInt(args[0]);
 		boolean is_serving = false;
-		
-		if(Integer.parseInt(args[1]) == 1)
+
+		if (Integer.parseInt(args[1]) == 1)
 			is_serving = true;
 		else
 			is_serving = false;
-			
+
 		String Server2_name = args[2];
-		int port2 = Integer.parseInt(args[3]);
-		
+		int port2 = Integer.parseInt(args[3]);	
+
 		try {
 			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
-			
+
 			System.out.println("Server listening on port " + port);
 			System.out.println("Serving: " + Boolean.valueOf(isServing));
-			
+
 			server.service();
-			
+
 		} catch (SocketException ex) {
 			System.out.println("Socket error: " + ex.getMessage());
 		} catch (IOException ex) {
 			System.out.println("I/O error: " + ex.getMessage());
 		}
 	}
-	
 
-	public void servingTimer(DatagramSocket socket){
-		
-		long howLong = 1000*60; //20min
-		//long howLong = 10000; //10 sec
+	public void servingTimer(DatagramSocket socket) {
+		long howLong = 1000 * 60; // 1 minute
 		Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
+		timer.schedule(new TimerTask() {
 
-            @Override
-            public void run() {
-            	System.out.println("Time to stop serving");
-        		changeServer(socket);
-            }
-        }, howLong);
-		
-    }
-	
-	 
+			@Override
+			public void run() {
+				System.out.println("Time to stop serving");
+				changeServer(socket);
+			}
+		}, howLong);
+	}
 
 	private void service() throws IOException {
-
 		socket = new DatagramSocket(port);
-		if(isStarting) {
-		initializeClients();
+		if (isStarting) {
+			initializeClients();
+		}
 		
-		}
-		//Start timer for 5 minutes
-		if(isServing) {
+		// Start timer for 5 minutes
+		if (isServing) {
 			servingTimer(socket);
+		} else if (isServing == false) {
+			NotServingThread thread = new NotServingThread(this, socket);
+			thread.start();
 		}
-		else if(isServing == false) {
-				NotServingThread thread = new NotServingThread(this, socket);
-				thread.start();
-				
-			}
 
 		while (true) {
 			DatagramPacket requestPacket = null;
-			
+
 			try {
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
-				
+
 				socket.receive(requestPacket);
 
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
-				
-				System.out.print("Server has Recieved: ");
+
+				System.out.print("Server has received: ");
 				System.out.println(message);
-				
+
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
-				
-				switch(command) {
-					case "REGISTER":
-						registerClient(socket, splitMessage, requestPacket);
-						break;
-						
-					case "DE-REGISTER":
-						deRegisterClient(socket, splitMessage, requestPacket);
-						break;
 
-					case "START-SERVING":
-						System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
-						isServing = true;
-						System.out.println("Serving: " + Boolean.valueOf(isServing));
-						servingTimer(socket);
-						break;
-					case "UPDATE-SERVER":
-						try {
-							if(splitMessage[1].contains("/")) {
-								String hostName[] = splitMessage[1].split("/");
-								Server2 = InetAddress.getByName(hostName[1]);
-							}
-							else {
-								
-								Server2 = InetAddress.getByName(splitMessage[1]);
-							}
-							
-						} catch (UnknownHostException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+				switch (command) {
+				case "REGISTER":
+				case "REGISTERED":
+					registerClient(socket, splitMessage, requestPacket);
+					break;
+
+				case "DE-REGISTER":
+					deRegisterClient(socket, splitMessage, requestPacket);
+					break;
+
+				case "START-SERVING":
+					//System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
+					isServing = true;
+					System.out.println("Serving: " + Boolean.valueOf(isServing));
+					servingTimer(socket);
+					break;
+					
+				case "UPDATE-SERVER":
+					try {
+						if (splitMessage[1].contains("/")) {
+							String hostName[] = splitMessage[1].split("/");
+							Server2 = InetAddress.getByName(hostName[1]);
+						} else {
+
+							Server2 = InetAddress.getByName(splitMessage[1]);
 						}
-						
-						Port2 = Integer.parseInt(splitMessage[2]);
-						break;
-						
 
-						
-					
-					case "PUBLISH":
-						publish(socket,splitMessage, requestPacket);
-						break;
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 
-					
-					default:
+					Port2 = Integer.parseInt(splitMessage[2]);
+					break;
 
-						otherRequests(socket, splitMessage, requestPacket);
-						break;
+				case "PUBLISH":
+					publish(socket, splitMessage, requestPacket);
+					break;
+
+				default:
+					otherRequests(socket, splitMessage, requestPacket);
+					break;
 				}
-				
 
 			} catch (Exception e) {
-				//here an exception causes the program to crash if out of bounds
+				// here an exception causes the program to crash if out of bounds
 				socket.close();
 				e.printStackTrace();
 			}
 		}
 	}
-	
+
 	public void writeClientsFiles() {
 		FileWriter writer;
 		String output = "";
-		
+
 		try {
 			writer = new FileWriter("clients_files_" + String.valueOf(port) + ".txt");
-			
-			for(int j = 0; j < clientHandlers.size(); j++) {
+
+			for (int j = 0; j < clientHandlers.size(); j++) {
 				ArrayList<String> subjects_list = clientHandlers.get(j).subjects;
 				String client_subjects = "";
-				
-				for(int k = 0; k < subjects_list.size(); k++)
-					if(k != subjects_list.size() - 1)
+
+				for (int k = 0; k < subjects_list.size(); k++)
+					if (k != subjects_list.size() - 1)
 						client_subjects += subjects_list.get(k) + ",";
-					
+
 					else
 						client_subjects += subjects_list.get(k);
-				
-				if(subjects_list.size() != 0)
+
+				if (subjects_list.size() != 0)
 					output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " " + client_subjects + " "
-				        + clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
-				
+							+ clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
+
 				else
 					output += clientHandlers.get(j).name + " " + clientHandlers.get(j).RQ + " "
-					        + clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
-				
+							+ clientHandlers.get(j).clientAddress + " " + clientHandlers.get(j).clientPort + "\n";
 			}
-			
+
 			writer.write(output);
-			
+
 			writer.close();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 	}
-	
+
 	public void initializeClients() throws IOException {
 		String file_name = "clients_files_" + String.valueOf(port) + ".txt";
-		
+
 		File file = new File(file_name);
 		BufferedReader reader;
-		
-		
-		if(file.exists() &&  !file.isDirectory()) {
+
+		if (file.exists() && !file.isDirectory()) {
 			isStarting = false;
-			System.out.println("File does exist");
-			
+			//System.out.println("File does exist");
+
 			reader = new BufferedReader(new FileReader(file_name));
-				
+
 			String line = reader.readLine();
 			String subjects[] = null;
-			
-			while(line != null) {
+
+			while (line != null) {
 				Semaphore messageFlag = new Semaphore(0);
 				messageFlags.add(messageFlag);
-				
+
 				String splitLine[] = line.split(" ");
-			
-				
-				if(line.contains(",")) {
+
+				if (line.contains(",")) {
 					subjects = splitLine[2].split(",");
 				}
-					
+
 				
-				for(String s : splitLine)
+				//TODO SOMETHING ISNT RIGHT HERE THE SUBJETCS LIST ISNT BEING PROPERLY CREATED AND
+				//THIS LINE != isnt right
+				/*for (String s : splitLine)
 					System.out.print(s + " ");
-				
-				
-				/*if(subjects.length != 0) {
-					System.out.print("subjects: ");
-					for(String s : subjects)
-						System.out.print(s + " ");
-					System.out.println("");
-				}*/
-				
+				System.out.println();*/
+
+				/*
+				 * if(subjects.length != 0) { System.out.print("subjects: "); for(String s :
+				 * subjects) System.out.print(s + " "); System.out.println(""); }
+				 */
+
 				ClientHandler client;
 				ArrayList<String> sub = new ArrayList<>();
-				
-				if(splitLine.length > 4) {
-					client = new ClientHandler(socket, InetAddress.getByName(splitLine[3].replace("/", "")), Integer.parseInt(splitLine[4]), messageFlag, splitLine[0], this, (ArrayList<String>) Arrays.asList(subjects), false);
+
+				if (splitLine.length > 4) {
+					client = new ClientHandler(socket, InetAddress.getByName(splitLine[3].replace("/", "")),
+							Integer.parseInt(splitLine[4]), messageFlag, splitLine[0], this,
+							(ArrayList<String>) Arrays.asList(subjects), false);
 				}
-					
+
 				else {
-					client = new ClientHandler(socket, InetAddress.getByName(splitLine[2].replace("/", "")), Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false);
+					client = new ClientHandler(socket, InetAddress.getByName(splitLine[2].replace("/", "")),
+							Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false);
 				}
-					
-				
+
 				client.start();
-				
+
 				clientHandlers.add(client);
-				
+
 				line = reader.readLine();
 			}
-			
-			reader.close();
 
+			reader.close();
 		}
-		
+
 		else {
 			System.out.println("File does not exist");
 			return;
 		}
-			
 	}
-	
+
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
 		ArrayList<String> subjects = new ArrayList<>();
 		ArrayList<String> clients_name = new ArrayList<>();
-		
-		for(ClientHandler clientHandler : clientHandlers)
+
+		for (ClientHandler clientHandler : clientHandlers)
 			clients_name.add(clientHandler.name);
-		
+
 		if (!(clients_name.contains(name))) {
 			Semaphore messageFlag = new Semaphore(0);
-			
+
 			messageFlags.add(messageFlag);
-			
+
 			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this, subjects, true);
-			
+
 			// Invoking the start() method
 			t.start();
-			
+
 			t.newPacket(packet);
 			messageFlag.release();
 
 			clientHandlers.add(t);
+		}
 
-		//	writeClientsFile(clients, clientHandlers);
-
-		} 
-		
 		else {
 			// REGISTER-DENIED RQ# Reason
 			String message = "REGISTER-DENIED" + " " + splitMessage[1] + " " + "NAME_IN_USE";
-			String message2 = "REGISTER-DENIED" + " " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
-
+			String message2 = "REGISTER-DENIED" + " " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3]
+					+ " " + splitMessage[4];
 
 			byte[] buffer = message.getBytes();
 			byte[] buffer2 = message2.getBytes();
 
-			if(isServing) {
-				DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
-				
+			if (isServing) {
+				DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
+						packet.getPort());
+
 				DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 				try {
 					socket.send(response);
 					socket.send(ServerResponse);
@@ -346,34 +322,29 @@ public class Server {
 	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		int RQ = 0;
 		String name = splitMessage[2];
-		
+
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
-				
-				
+
 				RQ = clientHandlers.get(i).RQ;
-				
+
 				clientHandlers.get(i).stop();
 				clientHandlers.remove(i);
 				messageFlags.remove(i);
 
-				
-			
-				
 				writeClientsFiles();
-
 			}
 		}
-		
+
 		String message = "DE-REGISTER" + " " + RQ + " " + name;
 
 		byte[] buffer = message.getBytes();
 
-		if(isServing) {
+		if (isServing) {
 			DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
-			
+
 			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
-			
+
 			try {
 				socket.send(response);
 				socket.send(ServerResponse);
@@ -381,138 +352,90 @@ public class Server {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-
 		}
-		
-		
-		
-	//TODO: REMOVE DATA FROM THE THING
-		
 	}
-	
-	
+
 	private void publish(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
-		
-		//first check name of user and subject and make sure subject is in list for the user
-		
-		//if so send message to all other clients that have the same subject
-		
+
+		// first check name of user and subject and make sure subject is in list for the
+		// user
+
+		// if so send message to all other clients that have the same subject
+
 		Boolean subjectCheck = false;
+		Boolean portCheck = false;
 		String subject = splitMessage[3].toUpperCase();
 		String name = splitMessage[2];
-	
-	
-				
-		
-				//this is checking for the sending server is in the register for subject
-				for (int i = 0; i < clientHandlers.size(); i++) {
-					if (clientHandlers.get(i).name.equals(name)) {
-						
-						if(clientHandlers.get(i).subjects.contains(subject)) {
-							subjectCheck = true;
-						}
-						
-					}
-					
-				}
-				
-				int count = 4;
-				String messageRec = " ";
-				while(count < splitMessage.length) {
-					messageRec = messageRec + " " + splitMessage[count];
-					count = count +1;
-				}
-				
-	String message = "MESSAGE" + " "+ name + " " + subject + " " + messageRec;
-	byte[] buffer = message.getBytes();
 
-	
-	//goes through hthe rest of them
-	if(subjectCheck) {
+		// this is checking for the sending server is in the register for subject
 		for (int i = 0; i < clientHandlers.size(); i++) {
-			if (!(clientHandlers.get(i).name.equals(name))) {
-				
-				//forward message to all clients tht have that subject in their list and are not the sender
-				if(clientHandlers.get(i).subjects.contains(subject)) {
-					
-					if(isServing) {
-						DatagramPacket response = new DatagramPacket(buffer, buffer.length,clientHandlers.get(i).clientAddress,clientHandlers.get(i).clientPort);
-						
-						try {
-							socket.send(response);
-							
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+			if (clientHandlers.get(i).name.equals(name)) {
+
+				if (clientHandlers.get(i).subjects.contains(subject)) {
+					subjectCheck = true;
+				}
+				if (clientHandlers.get(i).clientPort == packet.getPort()) {
+					portCheck = true;
+				}
+			}
+		}
+
+		int count = 4;
+		String messageRec = " ";
+		while (count < splitMessage.length) {
+			messageRec = messageRec + " " + splitMessage[count];
+			count = count + 1;
+		}
+
+		String message = "MESSAGE" + " " + name + " " + subject + " " + messageRec;
+		byte[] buffer = message.getBytes();
+
+		// goes through the rest of them
+		if (subjectCheck && portCheck) {
+			for (int i = 0; i < clientHandlers.size(); i++) {
+				if (!(clientHandlers.get(i).name.equals(name))) {
+
+					// forward message to all clients tht have that subject in their list and are
+					// not the sender
+					if (clientHandlers.get(i).subjects.contains(subject)) {
+
+						if (isServing) {
+							DatagramPacket response = new DatagramPacket(buffer, buffer.length,
+									clientHandlers.get(i).clientAddress, clientHandlers.get(i).clientPort);
+
+							try {
+								socket.send(response);
+
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
 						}
 					}
-					
-					
-					
 				}
-				
 			}
-		}
-		
-		
-		
-	}
-	else {
-		if(isServing) {
-			String message1 = "PUBLISH-DENIED " + splitMessage[1] + " couldbeAnything";
-		
-			byte[] buffer1 = message1.getBytes();
-		
-			DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
-		
-			try {
-				socket.send(response1);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-		
-		
-		
-	}
-				
-				
-	}	
-	}
-	
-	
 
-	
-	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) throws IOException {
-		String name = splitMessage[2];
-		
-		ArrayList<String> clients_name = new ArrayList<>();
-		
-		for(ClientHandler clientHandler : clientHandlers)
-			clients_name.add(clientHandler.name);
-		
-		if(clients_name.contains(name)) {
-
-			for (int i = 0; i < clientHandlers.size(); i++) {
-				if (clientHandlers.get(i).getName().equals(name)) {
-					
-					clientHandlers.get(i).newPacket(packet);
-					messageFlags.get(i).release();
-				}
-				
-			}
-		}
+		} 
 		
 		else {
-			
-			if(isServing) {
-				String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
-			
+			if (isServing) {
+				
+				String message1 = " ";
+				
+				if(!portCheck) {
+					message1 = "PUBLISH-DENIED " + splitMessage[1] + " PORT_ERROR";
+				
+				}
+				else{
+					message1 = "PUBLISH-DENIED " + splitMessage[1] + " You are not registered in this topic!";
+				}
+				
+
 				byte[] buffer1 = message1.getBytes();
-			
-				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(), packet.getPort());
-			
+
+				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
+						packet.getPort());
+
 				try {
 					socket.send(response1);
 				} catch (IOException e) {
@@ -522,93 +445,112 @@ public class Server {
 			}
 		}
 	}
-private void changeServer(DatagramSocket socket) {
-		
-		
-		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
-		System.out.println(Server2);
-		String message2 = "START-SERVING";
-		
 
-		byte[] buffer = message.getBytes();
-		byte[] buffer2 = message2.getBytes();
-		
-		for (int i = 0; i < clientHandlers.size(); i++) {
-			
-			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientHandlers.get(i).clientAddress, clientHandlers.get(i).clientPort);
-			
-			try {
-				socket.send(response);
+	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) throws IOException {
+		String name = splitMessage[2];
+
+		ArrayList<String> clients_name = new ArrayList<>();
+
+		for (ClientHandler clientHandler : clientHandlers)
+			clients_name.add(clientHandler.name);
+
+		if (clients_name.contains(name)) {
+
+			for (int i = 0; i < clientHandlers.size(); i++) {
+				if (clientHandlers.get(i).getName().equals(name)) {
+
+					clientHandlers.get(i).newPacket(packet);
+					messageFlags.get(i).release();
+				}
+			}
+		}
+
+		else {
+
+			if (isServing) {
+				String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
+
+				byte[] buffer1 = message1.getBytes();
+
+				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
+						packet.getPort());
+
+				try {
+					socket.send(response1);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
 		}
+	}
+
+	private void changeServer(DatagramSocket socket) {
+		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
+		String message2 = "START-SERVING";
+
+		//System.out.println(Server2);
 		
-		
-		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
-		try {
-			socket.send(ServerResponse);
+		byte[] buffer = message.getBytes();
+		byte[] buffer2 = message2.getBytes();
+
+		for (int i = 0; i < clientHandlers.size(); i++) {
+
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientHandlers.get(i).clientAddress,
+					clientHandlers.get(i).clientPort);
+
+			try {
+				socket.send(response);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		
-		Server.isServing = false;
-		System.out.println("Serving: " + Boolean.valueOf(isServing));
-		NotServingThread thread = new NotServingThread(this,socket);
-		thread.start();
-	}
+		}
 
+		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
 
-public void updateServer(DatagramSocket socket, String[] input) {
-	
-	System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
-	
-	port = Integer.parseInt(input[2]);
-	String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
-	
-	byte[] buffer2 = message2.getBytes();
-	
-	DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-			
-	try {
-		socket.send(ServerResponse);
+		try {
+			socket.send(ServerResponse);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-}
-	
+
+		Server.isServing = false;
+		System.out.println("Serving: " + Boolean.valueOf(isServing));
+		NotServingThread thread = new NotServingThread(this, socket);
+		thread.start();
+	}
+
+	public void updateServer(DatagramSocket socket, String[] input) {
+		System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
+
+		port = Integer.parseInt(input[2]);
+		String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
+
+		byte[] buffer2 = message2.getBytes();
+
+		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+
+		try {
+			socket.send(ServerResponse);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;
-		
+
 		StringBuilder ret = new StringBuilder();
 		int i = 0;
 		while (a[i] != 0) {
 			ret.append((char) a[i]);
 			i++;
 		}
+		
 		return ret;
 	}
-
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

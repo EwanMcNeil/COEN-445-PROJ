@@ -178,9 +178,9 @@ public class Server {
 				String client_subjects = "";
 
 				for (int k = 0; k < subjects_list.size(); k++)
-					if (k != subjects_list.size() - 1)
+					if (k != subjects_list.size() - 1 || subjects_list.size() == 1)
 						client_subjects += subjects_list.get(k) + ",";
-
+	
 					else
 						client_subjects += subjects_list.get(k);
 
@@ -245,7 +245,7 @@ public class Server {
 				if (splitLine.length > 4) {
 					client = new ClientHandler(socket, InetAddress.getByName(splitLine[3].replace("/", "")),
 							Integer.parseInt(splitLine[4]), messageFlag, splitLine[0], this,
-							(ArrayList<String>) Arrays.asList(subjects), false);
+							new ArrayList<>(Arrays.asList(subjects)), false);
 				}
 
 				else {

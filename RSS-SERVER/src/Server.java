@@ -104,10 +104,15 @@ public class Server {
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
 
 				socket.receive(requestPacket);
+				
+				
 
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
+				
+				
+			
 
 				System.out.print("Server has received: ");
 				System.out.println(message);

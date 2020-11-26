@@ -40,6 +40,7 @@ public class Client {
 
 	public InetAddress currentHost;
 	public int currentPort;
+	public boolean publish;
 
 	public int getRQ() {
 		return RQ;
@@ -136,6 +137,7 @@ public class Client {
 		deRegistered = false;
 		subjectsBool = false;
 		socketCreation = true;
+		publish = true;
 		
 			// InetAddress address = InetAddress.getByName(hostName);
 			
@@ -305,8 +307,6 @@ public class Client {
 		printSem.release();
 		String name = console.nextLine();
 
-		
-		clientName = name;
 
 		String message1 = "REGISTER " + RQ + " " + name + " " + clientIP+ " " + clientPort;
 
@@ -345,6 +345,8 @@ public class Client {
 		else {
 			if (registered) {
 				System.out.println("Registration is good, you may proceed.");
+				clientName = name;
+
 			}
 
 			else {
@@ -373,6 +375,16 @@ public class Client {
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
+		if(!registered) {
+			System.out.println("de-register successful");
+			startUp = true;
+			try {
+				service();
+			} catch (IOException e) {
+				
+			}
+		}
+		
 	}
 
 	private void updateClient(DatagramSocket socket) throws InterruptedException {
@@ -384,8 +396,7 @@ public class Client {
 
 		String name = console.nextLine();
 
-		clientName = name;
-
+		
 
 		String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
@@ -428,6 +439,8 @@ public class Client {
 
 		if (clientUpdate) {
 			System.out.println("Update sucessful please continue.");
+			clientName = name;
+
 		}
 
 		else {
@@ -492,7 +505,7 @@ public class Client {
 
 		String message = console.nextLine();
 
-		if (subjects.contains(subject.toUpperCase())) {
+		
 			// have a check here for if the subject is in its thing
 
 			String sendingMessage = "PUBLISH " + RQ + " " + clientName + " " + subject + " " + message;
@@ -512,11 +525,15 @@ public class Client {
 			}
 
 			RQ += 1;
-		} else {
+		
 			printSem.acquire();
+			
+			if(!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
+				publish = true;
+			}
 			printSem.release();
-		}
+		
 	}
 
 	private void echo(DatagramSocket socket) throws InterruptedException {
@@ -549,5 +566,9 @@ public class Client {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
 
+	}
+	
+	public void refreshClient() {
+		
 	}
 }

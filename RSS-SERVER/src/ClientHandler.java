@@ -166,24 +166,47 @@ class ClientHandler extends Thread {
 
 		splitMessage = Arrays.copyOfRange(splitMessage, 3, splitMessage.length);
 
+		/*We format the subjects coming from the request to send the response*/
 		for (String subject : splitMessage) {
 			subjects_sent += subject.toUpperCase() + " ";
 		}
-
+		
+		/*We check that all subjects from the request are accepted*/
 		for (String subject : splitMessage) {
+			subject = subject.toUpperCase();
+			
+			if (!accepted_subjects.contains(subject)) {
+				all_in = false;
+				System.out.println("subject " + subject + " is not accepted");
+			}
+		}
+
+		System.out.println("all_in " + all_in);
+		
+		/*for (String subject : splitMessage) {
 			subject = subject.toUpperCase();
 
 			if (!accepted_subjects.contains(subject)) {
 				all_in = false;
+				System.out.println("subject not accepted");
 				break;
 			}
 
 			else {
-				subjects.add(subject);
+				if(!subjects.contains(subject))
+					subjects.add(subject);
 			}
-		}
+		}*/
 
+		/*We format the message depending of if the subjects are accepted or not*/
 		if (all_in) {
+			for (String subject : splitMessage) {
+				subject = subject.toUpperCase();
+				
+				if(!subjects.contains(subject))
+					subjects.add(subject);
+			}
+			
 			message = "SUBJECTS-UPDATED " + RQ + " " + getName() + " " + subjects_sent;
 		}
 

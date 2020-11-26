@@ -64,7 +64,7 @@ public class socketHandler extends Thread {
 			System.out.print("Client has received: ");
 			System.out.println(message);
 			
-			System.out.print("ONCE ");
+			//System.out.print("ONCE ");
 			
 			switch (command) {
 			case "REGISTER":

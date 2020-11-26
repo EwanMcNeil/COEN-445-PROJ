@@ -177,27 +177,10 @@ class ClientHandler extends Thread {
 			
 			if (!accepted_subjects.contains(subject)) {
 				all_in = false;
-				System.out.println("subject " + subject + " is not accepted");
+				System.out.println(subject + " is not an accepted subject.");
 			}
 		}
-
-		System.out.println("all_in " + all_in);
 		
-		/*for (String subject : splitMessage) {
-			subject = subject.toUpperCase();
-
-			if (!accepted_subjects.contains(subject)) {
-				all_in = false;
-				System.out.println("subject not accepted");
-				break;
-			}
-
-			else {
-				if(!subjects.contains(subject))
-					subjects.add(subject);
-			}
-		}*/
-
 		/*We format the message depending of if the subjects are accepted or not*/
 		if (all_in) {
 			for (String subject : splitMessage) {

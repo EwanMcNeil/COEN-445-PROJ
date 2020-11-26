@@ -70,7 +70,7 @@ public class Server {
 	}
 
 	public void servingTimer(DatagramSocket socket) {
-		long howLong = 1000 * 60; // 1 minute
+		long howLong = 1000 * 240; // 1 minute
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
@@ -233,16 +233,6 @@ public class Server {
 				}
 
 				
-				//TODO SOMETHING ISNT RIGHT HERE THE SUBJETCS LIST ISNT BEING PROPERLY CREATED AND
-				//THIS LINE != isnt right
-				/*for (String s : splitLine)
-					System.out.print(s + " ");
-				System.out.println();*/
-
-				/*
-				 * if(subjects.length != 0) { System.out.print("subjects: "); for(String s :
-				 * subjects) System.out.print(s + " "); System.out.println(""); }
-				 */
 
 				ClientHandler client;
 				ArrayList<String> sub = new ArrayList<>();
@@ -384,6 +374,8 @@ public class Server {
 				}
 			}
 		}
+		
+		
 
 		int count = 4;
 		String messageRec = " ";
@@ -395,13 +387,15 @@ public class Server {
 		String message = "MESSAGE" + " " + name + " " + subject + " " + messageRec;
 		byte[] buffer = message.getBytes();
 
+		
+		
+		
 		// goes through the rest of them
 		if (subjectCheck && portCheck) {
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (!(clientHandlers.get(i).name.equals(name))) {
-
-					// forward message to all clients tht have that subject in their list and are
-					// not the sender
+					
+					System.out.print(clientHandlers.get(i).name);
 					if (clientHandlers.get(i).subjects.contains(subject)) {
 
 						if (isServing) {

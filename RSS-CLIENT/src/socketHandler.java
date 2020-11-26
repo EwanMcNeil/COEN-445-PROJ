@@ -64,6 +64,8 @@ public class socketHandler extends Thread {
 			System.out.print("Client has received: ");
 			System.out.println(message);
 			
+			System.out.print("ONCE ");
+			
 			switch (command) {
 			case "REGISTER":
 			case "REGISTERED":
@@ -78,7 +80,6 @@ public class socketHandler extends Thread {
 				/*System.out.println("Client has recieved:");
 				System.out.print(message);*/
 				deRegister(packet, splitMessage);
-				client.deRegClientSem.release();
 				break;
 
 			case "ECHO":
@@ -116,6 +117,8 @@ public class socketHandler extends Thread {
 			case "UPDATE-DENIED":
 				/*System.out.println("Client has recieved:");
 				System.out.println(message);*/
+				client.clientUpdate = false;
+				upClientSem.release();
 				break;
 
 			case "SUBJECTS-REJECTED":
@@ -129,8 +132,11 @@ public class socketHandler extends Thread {
 				break;
 			case "PUBLISH-DENIED":
 				
-				if(splitMessage[3] == "PORT_ERROR") {
+				if(splitMessage[2] == "PORT_ERROR") {
 					client.startUp = true;
+				}
+				else {
+					client.publish = false;
 				}
 				
 				publishSem.release();
@@ -210,8 +216,11 @@ public class socketHandler extends Thread {
 	}*/
 
 	public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
-		client.startUp = true;
-		client.RQ += 1;
+		
+			client.registered = false;
+			client.deRegClientSem.release();
+			
+		
 	}
 
 	private static StringBuilder formatMessage(byte[] a) {

@@ -526,11 +526,20 @@ public class Client {
 
 			RQ += 1;
 		
+			
+			
 			printSem.acquire();
 			
 			if(!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
 				publish = true;
+			}
+			if(startUp) {
+				try {
+					service();
+				} catch (IOException e) {
+					
+				}
 			}
 			printSem.release();
 		

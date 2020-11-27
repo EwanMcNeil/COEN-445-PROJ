@@ -37,8 +37,6 @@ public class Client {
 	boolean socketCreation;
 	boolean portError;
 	DatagramSocket socket;
-	
-	
 
 	public InetAddress currentHost;
 	public int currentPort;
@@ -127,17 +125,13 @@ public class Client {
 		clientPort = ClientPort;
 		printSem = new Semaphore(1);
 		subjects = new ArrayList<>();
-		
+
 		response = new Semaphore(0);
 
 		/*
-		echoSem = new Semaphore(0);
-		publishSem = new Semaphore(0);
-		upSubSem = new Semaphore(0);
-		upClientSem = new Semaphore(0);
-		regClientSem = new Semaphore(0);
-		deRegClientSem = new Semaphore(0);
-		/*
+		 * echoSem = new Semaphore(0); publishSem = new Semaphore(0); upSubSem = new
+		 * Semaphore(0); upClientSem = new Semaphore(0); regClientSem = new
+		 * Semaphore(0); deRegClientSem = new Semaphore(0); /*
 		 * 
 		 * 
 		 */
@@ -147,19 +141,17 @@ public class Client {
 		subjectsBool = false;
 		socketCreation = true;
 		publish = true;
-		portError =false;
-		
-			// InetAddress address = InetAddress.getByName(hostName);
-			
-			try {
-				socket = new DatagramSocket(clientPort,clientIP);
-			} catch (SocketException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-			
+		portError = false;
+
+		// InetAddress address = InetAddress.getByName(hostName);
+
+		try {
+			socket = new DatagramSocket(clientPort, clientIP);
+		} catch (SocketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 	// client needs localhost 10011 localhost 10012
@@ -170,18 +162,17 @@ public class Client {
 		}
 
 		String clientIP = args[0];
-		int clientPort = Integer.parseInt(args[1]);		
-		
+		int clientPort = Integer.parseInt(args[1]);
+
 		String hostname1 = args[2]; // IPaddress
 		int port1 = Integer.parseInt(args[3]);
 
 		String hostname2 = args[4];
 		int port2 = Integer.parseInt(args[5]);
-		
 
 		try {
-			Client client = new Client(InetAddress.getByName(clientIP), clientPort, InetAddress.getByName(hostname1), port1, InetAddress.getByName(hostname2),
-					port2);
+			Client client = new Client(InetAddress.getByName(clientIP), clientPort, InetAddress.getByName(hostname1),
+					port1, InetAddress.getByName(hostname2), port2);
 			System.out.println("Starting client connected to host: " + hostname1 + " on port: " + port1);
 			System.out.println("Starting client connected to host: " + hostname2 + " on port: " + port2);
 
@@ -197,13 +188,13 @@ public class Client {
 		Scanner console = new Scanner(System.in);
 
 		try {
-			
-			if(socketCreation) {
+
+			if (socketCreation) {
 				socketHandler socketHandler = new socketHandler(socket, this, printSem);
 				socketHandler.start();
 				socketCreation = false;
 			}
-			
+
 			while (true) {
 				// Create a Scanner object to read input.
 
@@ -317,12 +308,11 @@ public class Client {
 		printSem.release();
 		String name = console.nextLine();
 
-
-		String message1 = "REGISTER " + RQ + " " + name + " " + clientIP+ " " + clientPort;
+		String message1 = "REGISTER " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
 		byte[] requestbuffer1 = message1.getBytes();
 
-		String message2 = "REGISTER " + RQ + " " + name + " " + clientIP+ " " + clientPort;
+		String message2 = "REGISTER " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
 		byte[] requestbuffer2 = message2.getBytes();
 
@@ -347,7 +337,7 @@ public class Client {
 
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
-			
+
 			startUp = true;
 			service();
 		}
@@ -385,16 +375,16 @@ public class Client {
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
-		if(!registered) {
+		if (!registered) {
 			System.out.println("de-register successful");
 			startUp = true;
 			try {
 				service();
 			} catch (IOException e) {
-				
+
 			}
 		}
-		
+
 	}
 
 	private void updateClient(DatagramSocket socket) throws InterruptedException {
@@ -405,8 +395,6 @@ public class Client {
 		printSem.release();
 
 		String name = console.nextLine();
-
-		
 
 		String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
@@ -442,20 +430,20 @@ public class Client {
 			try {
 				service();
 			} catch (IOException e) {
-				
+
 			}
 		}
-		
-		if(portError) {
+
+		if (portError) {
 			System.out.println("portError resarting the client");
 			startUp = true;
 			try {
 				portError = false;
 				service();
 			} catch (IOException e) {
-			
+
 			}
-			
+
 		}
 
 		if (clientUpdate) {
@@ -508,17 +496,17 @@ public class Client {
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
-		
-		if(portError) {
+
+		if (portError) {
 			System.out.println("portError resarting the client");
 			startUp = true;
 			try {
 				portError = false;
 				service();
 			} catch (IOException e) {
-			
+
 			}
-			
+
 		}
 
 		RQ += 1;
@@ -538,56 +526,53 @@ public class Client {
 
 		String message = console.nextLine();
 
-		
-			// have a check here for if the subject is in its thing
+		// have a check here for if the subject is in its thing
 
-			String sendingMessage = "PUBLISH " + RQ + " " + clientName + " " + subject + " " + message;
-			/*
-			 * System.out.print("CLIENT send: "); System.out.println(sendingMessage);
-			 */
+		String sendingMessage = "PUBLISH " + RQ + " " + clientName + " " + subject + " " + message;
+		/*
+		 * System.out.print("CLIENT send: "); System.out.println(sendingMessage);
+		 */
 
-			byte[] requestbuffer = sendingMessage.getBytes();
+		byte[] requestbuffer = sendingMessage.getBytes();
 
-			// Send message to server
-			DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
+		// Send message to server
+		DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
+		try {
+			socket.send(request);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		RQ += 1;
+
+		boolean acquired = response.tryAcquire(10, TimeUnit.SECONDS);
+
+		if (portError) {
+			System.out.println("portError resarting the client");
+			startUp = true;
 			try {
-				socket.send(request);
+				portError = false;
+				service();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+
 			}
 
-			RQ += 1;
-		
-			
-			
-			boolean acquired = response.tryAcquire(10, TimeUnit.SECONDS);
-			
-			if(portError) {
-				System.out.println("portError resarting the client");
-				startUp = true;
-				try {
-					portError = false;
-					service();
-				} catch (IOException e) {
-				
-				}
-				
-			}
-			
-			if(!publish) {
+		}
+
+		if (!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
-				publish = true;
+			publish = true;
+		}
+		if (startUp) {
+			try {
+				service();
+			} catch (IOException e) {
+
 			}
-			if(startUp) {
-				try {
-					service();
-				} catch (IOException e) {
-					
-				}
-			}
-			printSem.release();
-		
+		}
+		printSem.release();
+
 	}
 
 	private void echo(DatagramSocket socket) throws InterruptedException {
@@ -619,20 +604,19 @@ public class Client {
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
-		
-		if(portError) {
+
+		if (portError) {
 			System.out.println("portError resarting the client");
 			startUp = true;
 			try {
 				portError = false;
 				service();
 			} catch (IOException e) {
-			
+
 			}
-			
+
 		}
 
 	}
-	
-	
+
 }

@@ -58,80 +58,66 @@ public class socketHandler extends Thread {
 
 			String command = splitMessage[0].toUpperCase().replace("_", "-");
 
-			/*System.out.println(splitMessage[0] + splitMessage[1] + splitMessage[2]);
-			System.out.println();*/
+			/*
+			 * System.out.println(splitMessage[0] + splitMessage[1] + splitMessage[2]);
+			 * System.out.println();
+			 */
 
 			System.out.print("Client has received: ");
 			System.out.println(message);
-			
-			//System.out.print("ONCE ");
-			
+
+			// System.out.print("ONCE ");
+
 			switch (command) {
 			case "REGISTER":
 			case "REGISTERED":
-				/*System.out.println("Client has recieved:");
-				System.out.print(message);*/
 				registered(packet, splitMessage);
 				client.registered = true;
-				//regClientSem.release();
+				// regClientSem.release();
 				client.response.release();
 				break;
 
 			case "DE-REGISTER":
-				/*System.out.println("Client has recieved:");
-				System.out.print(message);*/
-				deRegister(packet, splitMessage);
+				client.registered = false;
+				client.response.release();
 				break;
 
 			case "ECHO":
-				/*System.out.println("Client has recieved echo :");
-				System.out.print(message);*/
-				//echoSem.release();
+				// echoSem.release();
 				client.response.release();
 				break;
 
 			case "SUBJECTS":
 			case "SUBJECTS-UPDATED":
-				//System.out.println("Client has recieved:");
 				client.subjects.add(splitMessage[3]);
-				//System.out.println(message);
-				//subjectsUpdated(packet, splitMessage);
 				client.subjectsBool = true;
-				//upSubSem.release();
+				// upSubSem.release();
 				client.response.release();
 				break;
 
 			case "REGISTER-DENIED":
-				/*System.out.println("Client has recieved:");
-				System.out.println(message);*/
 				client.registered = false;
-				//regClientSem.release();
+				// regClientSem.release();
 				client.response.release();
 				break;
 
 			case "UPDATE":
 			case "UPDATE-CONFIRMED":
-				/*System.out.println("Client has recieved:");
-				System.out.println(message);*/
 				updatedApproved(packet, splitMessage);
 				client.clientUpdate = true;
-				//upClientSem.release();
+				// upClientSem.release();
 				client.response.release();
 				break;
 
 			case "UPDATE-DENIED":
-				/*System.out.println("Client has recieved:");
-				System.out.println(message);*/
 				client.clientUpdate = false;
-				//upClientSem.release();
+				// upClientSem.release();
 				client.response.release();
 				break;
 
 			case "SUBJECTS-REJECTED":
-				/*System.out.println("Client has recieved:");
-				System.out.println(message);*/
 				client.subjectsBool = false;
-				//upSubSem.release();
+				// upSubSem.release();
 				client.response.release();
 				break;
 			case "PORT-ERROR":
@@ -140,27 +126,23 @@ public class socketHandler extends Thread {
 				client.response.release();
 				break;
 			case "PUBLISH-DENIED":
-				
-				if(splitMessage[2] == "PORT_ERROR") {
+
+				if (splitMessage[2] == "PORT_ERROR") {
 					client.startUp = true;
-				}
-				else {
+				} else {
 					client.publish = false;
 				}
-				
-				//publishSem.release();
+
+				// publishSem.release();
 				client.response.release();
 				break;
-				
+
 			case "CHANGE-SERVER":
-				/*System.out.println(
-						"Port 1: " + client.Port1 + " " + "Port from message: " + Integer.parseInt(splitMessage[2]));*/
 				try {
 					if (splitMessage[1].contains("/")) {
 						String hostName[] = splitMessage[1].split("/");
 						client.currentHost = InetAddress.getByName(hostName[1]);
 					} else {
-						//System.out.println("hiiii " + splitMessage[1].getBytes());
 						client.currentHost = InetAddress.getByName(splitMessage[1]);
 					}
 
@@ -197,7 +179,7 @@ public class socketHandler extends Thread {
 				printSem.release();
 
 				break;
-				
+
 			default:
 				System.out.println("Server response not recognized.");
 				break;
@@ -215,23 +197,27 @@ public class socketHandler extends Thread {
 		client.currentPort = requestPacket.getPort();
 	}
 
-	/*public void updatedDenied(DatagramPacket requestPacket, String splitMessage[]) {
+	/*
+	 * public void updatedDenied(DatagramPacket requestPacket, String
+	 * splitMessage[]) {
+	 * 
+	 * // TODO
+	 * 
+	 * }
+	 * 
+	 * public void subjectsUpdated(DatagramPacket requestPacket, String
+	 * splitMessage[]) {
+	 * 
+	 * }
+	 */
 
-		// TODO
-
-	}
-
-	public void subjectsUpdated(DatagramPacket requestPacket, String splitMessage[]) {
-
-	}*/
-
-	public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
-		
-			client.registered = false;
-			//client.deRegClientSem.release();
-			
-			client.response.release();
-	}
+	/*
+	 * public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
+	 * 
+	 * client.registered = false; //client.deRegClientSem.release();
+	 * 
+	 * client.response.release(); }
+	 */
 
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
@@ -243,7 +229,7 @@ public class socketHandler extends Thread {
 			ret.append((char) a[i]);
 			i++;
 		}
-		
+
 		return ret;
 	}
 }

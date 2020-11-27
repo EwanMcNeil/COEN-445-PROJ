@@ -23,12 +23,12 @@ public class NotServingThread extends Thread {
 		String command = splitInput[0].toUpperCase().replace("_", "-");
 		if (command == "UPDATE-SERVER" && splitInput.length == 3) {
 			server.updateServer(socket, splitInput);
-		} 
-		
+		}
+
 		else {
 			System.out.println("Error: This is not a valid command!");
 		}
-		
+
 		if (server.isServing) {
 			Thread.interrupted();
 		}

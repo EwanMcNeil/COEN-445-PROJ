@@ -52,7 +52,7 @@ public class Server {
 			is_serving = false;
 
 		String Server2_name = args[2];
-		int port2 = Integer.parseInt(args[3]);	
+		int port2 = Integer.parseInt(args[3]);
 
 		try {
 			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
@@ -70,7 +70,7 @@ public class Server {
 	}
 
 	public void servingTimer(DatagramSocket socket) {
-		long howLong = 1000 * 240; // 1 minute
+		long howLong = 1000 * 240; // 24 minutes
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
@@ -87,7 +87,7 @@ public class Server {
 		if (isStarting) {
 			initializeClients();
 		}
-		
+
 		// Start timer for 5 minutes
 		if (isServing) {
 			servingTimer(socket);
@@ -104,15 +104,10 @@ public class Server {
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
 
 				socket.receive(requestPacket);
-				
-				
 
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
-				
-				
-			
 
 				System.out.print("Server has received: ");
 				System.out.println(message);
@@ -130,12 +125,12 @@ public class Server {
 					break;
 
 				case "START-SERVING":
-					//System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
+					// System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
 					isServing = true;
 					System.out.println("Serving: " + Boolean.valueOf(isServing));
 					servingTimer(socket);
 					break;
-					
+
 				case "UPDATE-SERVER":
 					try {
 						if (splitMessage[1].contains("/")) {
@@ -185,7 +180,7 @@ public class Server {
 				for (int k = 0; k < subjects_list.size(); k++)
 					if (k != subjects_list.size() - 1 || subjects_list.size() == 1)
 						client_subjects += subjects_list.get(k) + ",";
-	
+
 					else
 						client_subjects += subjects_list.get(k);
 
@@ -215,7 +210,7 @@ public class Server {
 
 		if (file.exists() && !file.isDirectory()) {
 			isStarting = false;
-			//System.out.println("File does exist");
+			// System.out.println("File does exist");
 
 			reader = new BufferedReader(new FileReader(file_name));
 
@@ -231,8 +226,6 @@ public class Server {
 				if (line.contains(",")) {
 					subjects = splitLine[2].split(",");
 				}
-
-				
 
 				ClientHandler client;
 				ArrayList<String> sub = new ArrayList<>();
@@ -277,7 +270,8 @@ public class Server {
 
 			messageFlags.add(messageFlag);
 
-			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this, subjects, true);
+			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this,
+					subjects, true);
 
 			// Invoking the start() method
 			t.start();
@@ -321,12 +315,12 @@ public class Server {
 
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
-				if(clientHandlers.get(i).clientPort == incomingPort) {
+				if (clientHandlers.get(i).clientPort == incomingPort || this.Port2 == incomingPort) {
 					RQ = clientHandlers.get(i).RQ;
 					clientHandlers.get(i).stop();
 					clientHandlers.remove(i);
 					messageFlags.remove(i);
-	
+
 					writeClientsFiles();
 				}
 			}
@@ -375,8 +369,6 @@ public class Server {
 				}
 			}
 		}
-		
-		
 
 		int count = 4;
 		String messageRec = " ";
@@ -388,14 +380,11 @@ public class Server {
 		String message = "MESSAGE" + " " + name + " " + subject + " " + messageRec;
 		byte[] buffer = message.getBytes();
 
-		
-		
-		
 		// goes through the rest of them
 		if (subjectCheck && portCheck) {
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (!(clientHandlers.get(i).name.equals(name))) {
-					
+
 					System.out.print(clientHandlers.get(i).name);
 					if (clientHandlers.get(i).subjects.contains(subject)) {
 
@@ -415,21 +404,19 @@ public class Server {
 				}
 			}
 
-		} 
-		
+		}
+
 		else {
 			if (isServing) {
-				
+
 				String message1 = " ";
-				
-				if(!portCheck) {
+
+				if (!portCheck) {
 					message1 = "PUBLISH-DENIED " + splitMessage[1] + " PORT_ERROR";
-				
-				}
-				else{
+
+				} else {
 					message1 = "PUBLISH-DENIED " + splitMessage[1] + " You are not registered in this topic!";
 				}
-				
 
 				byte[] buffer1 = message1.getBytes();
 
@@ -451,7 +438,6 @@ public class Server {
 
 		ArrayList<String> clients_name = new ArrayList<>();
 		int incomingPort = packet.getPort();
-		
 
 		for (ClientHandler clientHandler : clientHandlers)
 			clients_name.add(clientHandler.name);
@@ -460,36 +446,33 @@ public class Server {
 
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
-					
-					if(splitMessage[0].equals("UPDATE")) {
-						
-						clientHandlers.get(i).newPacket(packet);
-						messageFlags.get(i).release();
-					}
-					else {
-					if(incomingPort == clientHandlers.get(i).clientPort) {
+
+					if (splitMessage[0].equals("UPDATE")) {
 
 						clientHandlers.get(i).newPacket(packet);
 						messageFlags.get(i).release();
-					}
-					else {
-						
-						if(isServing) {
-						String message1 = "PORT-ERROR " + splitMessage[1] + " PORT DOES NOT MATCH UP";
-						
-						
-						byte[] buffer1 = message1.getBytes();
+					} else {
+						if (clientHandlers.get(i).clientPort == incomingPort || this.Port2 == incomingPort) {
 
-						DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
-								packet.getPort());
+							clientHandlers.get(i).newPacket(packet);
+							messageFlags.get(i).release();
+						} else {
 
-						try {
-							socket.send(response1);
-						} catch (IOException e) {
-						
+							if (isServing) {
+								String message1 = "PORT-ERROR " + splitMessage[1] + " PORT DOES NOT MATCH UP";
+
+								byte[] buffer1 = message1.getBytes();
+
+								DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length,
+										packet.getAddress(), packet.getPort());
+
+								try {
+									socket.send(response1);
+								} catch (IOException e) {
+
+								}
+							}
 						}
-						}
-					}
 					}
 				}
 			}
@@ -498,10 +481,9 @@ public class Server {
 		else {
 
 			if (isServing) {
-				
+
 				String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
-				
-				
+
 				byte[] buffer1 = message1.getBytes();
 
 				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
@@ -521,8 +503,8 @@ public class Server {
 		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
 		String message2 = "START-SERVING";
 
-		//System.out.println(Server2);
-		
+		// System.out.println(Server2);
+
 		byte[] buffer = message.getBytes();
 		byte[] buffer2 = message2.getBytes();
 
@@ -582,7 +564,7 @@ public class Server {
 			ret.append((char) a[i]);
 			i++;
 		}
-		
+
 		return ret;
 	}
 }

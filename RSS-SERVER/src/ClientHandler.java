@@ -48,7 +48,7 @@ class ClientHandler extends Thread {
 				String name = splitMessage[2];
 
 				if (startUp) {
-					//System.out.println("Startup");
+					// System.out.println("Startup");
 					// REGISTERED RQ#
 					registerClient(splitMessage);
 				}
@@ -108,20 +108,22 @@ class ClientHandler extends Thread {
 		server.writeClientsFiles();
 	}
 
-	private void updateClient(String splitMessage[]){
+	private void updateClient(String splitMessage[]) {
 		String name = splitMessage[2];
 
-		String message = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4];
+		String message = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " "
+				+ splitMessage[4];
 
-		System.out.println("splitMessage: " + splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " " + splitMessage[4]);
-		
+		System.out.println("splitMessage: " + splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2] + " "
+				+ splitMessage[3] + " " + splitMessage[4]);
+
 		try {
 			if (splitMessage[3].contains("/")) {
 				String hostName[] = splitMessage[3].split("/");
 				this.clientAddress = InetAddress.getByName(hostName[1]);
 				System.out.println("if clientAddress: " + clientAddress);
 			} else {
-				//System.out.println("hiiii " + splitMessage[1].getBytes());
+				// System.out.println("hiiii " + splitMessage[1].getBytes());
 				this.clientAddress = InetAddress.getByName(splitMessage[3]);
 				System.out.println("else clientAddress: " + clientAddress);
 			}
@@ -130,9 +132,9 @@ class ClientHandler extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		this.clientPort = Integer.parseInt(splitMessage[4]);
-		
+
 		System.out.println("clientPort: " + clientPort);
 		System.out.println("clientAddress: " + clientAddress);
 
@@ -166,30 +168,30 @@ class ClientHandler extends Thread {
 
 		splitMessage = Arrays.copyOfRange(splitMessage, 3, splitMessage.length);
 
-		/*We format the subjects coming from the request to send the response*/
+		/* We format the subjects coming from the request to send the response */
 		for (String subject : splitMessage) {
 			subjects_sent += subject.toUpperCase() + " ";
 		}
-		
-		/*We check that all subjects from the request are accepted*/
+
+		/* We check that all subjects from the request are accepted */
 		for (String subject : splitMessage) {
 			subject = subject.toUpperCase();
-			
+
 			if (!accepted_subjects.contains(subject)) {
 				all_in = false;
 				System.out.println(subject + " is not an accepted subject.");
 			}
 		}
-		
-		/*We format the message depending of if the subjects are accepted or not*/
+
+		/* We format the message depending of if the subjects are accepted or not */
 		if (all_in) {
 			for (String subject : splitMessage) {
 				subject = subject.toUpperCase();
-				
-				if(!subjects.contains(subject))
+
+				if (!subjects.contains(subject))
 					subjects.add(subject);
 			}
-			
+
 			message = "SUBJECTS-UPDATED " + RQ + " " + getName() + " " + subjects_sent;
 		}
 
@@ -259,7 +261,7 @@ class ClientHandler extends Thread {
 			ret.append((char) a[i]);
 			i++;
 		}
-		
+
 		return ret;
 	}
 }

@@ -73,7 +73,8 @@ public class socketHandler extends Thread {
 				System.out.print(message);*/
 				registered(packet, splitMessage);
 				client.registered = true;
-				regClientSem.release();
+				//regClientSem.release();
+				client.response.release();
 				break;
 
 			case "DE-REGISTER":
@@ -85,7 +86,8 @@ public class socketHandler extends Thread {
 			case "ECHO":
 				/*System.out.println("Client has recieved echo :");
 				System.out.print(message);*/
-				echoSem.release();
+				//echoSem.release();
+				client.response.release();
 				break;
 
 			case "SUBJECTS":
@@ -95,14 +97,16 @@ public class socketHandler extends Thread {
 				//System.out.println(message);
 				//subjectsUpdated(packet, splitMessage);
 				client.subjectsBool = true;
-				upSubSem.release();
+				//upSubSem.release();
+				client.response.release();
 				break;
 
 			case "REGISTER-DENIED":
 				/*System.out.println("Client has recieved:");
 				System.out.println(message);*/
 				client.registered = false;
-				regClientSem.release();
+				//regClientSem.release();
+				client.response.release();
 				break;
 
 			case "UPDATE":
@@ -111,24 +115,29 @@ public class socketHandler extends Thread {
 				System.out.println(message);*/
 				updatedApproved(packet, splitMessage);
 				client.clientUpdate = true;
-				upClientSem.release();
+				//upClientSem.release();
+				client.response.release();
 				break;
 
 			case "UPDATE-DENIED":
 				/*System.out.println("Client has recieved:");
 				System.out.println(message);*/
 				client.clientUpdate = false;
-				upClientSem.release();
+				//upClientSem.release();
+				client.response.release();
 				break;
 
 			case "SUBJECTS-REJECTED":
 				/*System.out.println("Client has recieved:");
 				System.out.println(message);*/
 				client.subjectsBool = false;
-				upSubSem.release();
+				//upSubSem.release();
+				client.response.release();
 				break;
 			case "PORT-ERROR":
 				client.startUp = true;
+				client.portError = true;
+				client.response.release();
 				break;
 			case "PUBLISH-DENIED":
 				
@@ -139,7 +148,8 @@ public class socketHandler extends Thread {
 					client.publish = false;
 				}
 				
-				publishSem.release();
+				//publishSem.release();
+				client.response.release();
 				break;
 				
 			case "CHANGE-SERVER":
@@ -218,9 +228,9 @@ public class socketHandler extends Thread {
 	public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
 		
 			client.registered = false;
-			client.deRegClientSem.release();
+			//client.deRegClientSem.release();
 			
-		
+			client.response.release();
 	}
 
 	private static StringBuilder formatMessage(byte[] a) {

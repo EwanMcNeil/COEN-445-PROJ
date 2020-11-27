@@ -28,12 +28,14 @@ public class Client {
 	Semaphore upClientSem;
 	Semaphore regClientSem;
 	Semaphore deRegClientSem;
+	Semaphore response;
 	boolean registered;
 	boolean updated;
 	boolean deRegistered;
 	boolean subjectsBool;
 	boolean clientUpdate;
 	boolean socketCreation;
+	boolean portError;
 	DatagramSocket socket;
 	
 	
@@ -125,19 +127,27 @@ public class Client {
 		clientPort = ClientPort;
 		printSem = new Semaphore(1);
 		subjects = new ArrayList<>();
+		
+		response = new Semaphore(0);
 
+		/*
 		echoSem = new Semaphore(0);
 		publishSem = new Semaphore(0);
 		upSubSem = new Semaphore(0);
 		upClientSem = new Semaphore(0);
 		regClientSem = new Semaphore(0);
 		deRegClientSem = new Semaphore(0);
+		/*
+		 * 
+		 * 
+		 */
 		registered = false;
 		updated = false;
 		deRegistered = false;
 		subjectsBool = false;
 		socketCreation = true;
 		publish = true;
+		portError =false;
 		
 			// InetAddress address = InetAddress.getByName(hostName);
 			
@@ -333,7 +343,7 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		boolean acquired = regClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);
 
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
@@ -371,7 +381,7 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		boolean acquired = deRegClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
@@ -424,7 +434,7 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		boolean acquired = upClientSem.tryAcquire(60, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);
 
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
@@ -432,9 +442,20 @@ public class Client {
 			try {
 				service();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				
 			}
+		}
+		
+		if(portError) {
+			System.out.println("portError resarting the client");
+			startUp = true;
+			try {
+				portError = false;
+				service();
+			} catch (IOException e) {
+			
+			}
+			
 		}
 
 		if (clientUpdate) {
@@ -482,10 +503,22 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		boolean acquired = upSubSem.tryAcquire(60, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);
 
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
+		}
+		
+		if(portError) {
+			System.out.println("portError resarting the client");
+			startUp = true;
+			try {
+				portError = false;
+				service();
+			} catch (IOException e) {
+			
+			}
+			
 		}
 
 		RQ += 1;
@@ -528,7 +561,19 @@ public class Client {
 		
 			
 			
-			printSem.acquire();
+			boolean acquired = response.tryAcquire(10, TimeUnit.SECONDS);
+			
+			if(portError) {
+				System.out.println("portError resarting the client");
+				startUp = true;
+				try {
+					portError = false;
+					service();
+				} catch (IOException e) {
+				
+				}
+				
+			}
 			
 			if(!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
@@ -570,14 +615,24 @@ public class Client {
 
 		RQ += 1;
 
-		boolean acquired = echoSem.tryAcquire(60, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
+		}
+		
+		if(portError) {
+			System.out.println("portError resarting the client");
+			startUp = true;
+			try {
+				portError = false;
+				service();
+			} catch (IOException e) {
+			
+			}
+			
 		}
 
 	}
 	
-	public void refreshClient() {
-		
-	}
+	
 }

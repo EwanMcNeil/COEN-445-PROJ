@@ -317,17 +317,18 @@ public class Server {
 	private void deRegisterClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		int RQ = 0;
 		String name = splitMessage[2];
+		int incomingPort = packet.getPort();
 
 		for (int i = 0; i < clientHandlers.size(); i++) {
 			if (clientHandlers.get(i).getName().equals(name)) {
-
-				RQ = clientHandlers.get(i).RQ;
-
-				clientHandlers.get(i).stop();
-				clientHandlers.remove(i);
-				messageFlags.remove(i);
-
-				writeClientsFiles();
+				if(clientHandlers.get(i).clientPort == incomingPort) {
+					RQ = clientHandlers.get(i).RQ;
+					clientHandlers.get(i).stop();
+					clientHandlers.remove(i);
+					messageFlags.remove(i);
+	
+					writeClientsFiles();
+				}
 			}
 		}
 
@@ -449,6 +450,8 @@ public class Server {
 		String name = splitMessage[2];
 
 		ArrayList<String> clients_name = new ArrayList<>();
+		int incomingPort = packet.getPort();
+		
 
 		for (ClientHandler clientHandler : clientHandlers)
 			clients_name.add(clientHandler.name);
@@ -457,9 +460,34 @@ public class Server {
 
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (clientHandlers.get(i).getName().equals(name)) {
+					
+					if(splitMessage[0].equals("UPDATE")) {
+						
+						clientHandlers.get(i).newPacket(packet);
+						messageFlags.get(i).release();
+					}
+					else {
+					if(incomingPort == clientHandlers.get(i).clientPort) {
 
-					clientHandlers.get(i).newPacket(packet);
-					messageFlags.get(i).release();
+						clientHandlers.get(i).newPacket(packet);
+						messageFlags.get(i).release();
+					}
+					else {
+						String message1 = "PORT-ERROR " + splitMessage[1] + " PORT DOES NOT MATCH UP";
+						
+						
+						byte[] buffer1 = message1.getBytes();
+
+						DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
+								packet.getPort());
+
+						try {
+							socket.send(response1);
+						} catch (IOException e) {
+						
+						}
+					}
+					}
 				}
 			}
 		}
@@ -467,8 +495,10 @@ public class Server {
 		else {
 
 			if (isServing) {
+				
 				String message1 = "UPDATE-DENIED " + splitMessage[1] + " NAME_NOT_IN_USE";
-
+				
+				
 				byte[] buffer1 = message1.getBytes();
 
 				DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),

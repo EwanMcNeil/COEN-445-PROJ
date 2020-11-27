@@ -57,16 +57,9 @@ public class socketHandler extends Thread {
 			String splitMessage[] = message.split(" ");
 
 			String command = splitMessage[0].toUpperCase().replace("_", "-");
-
-			/*
-			 * System.out.println(splitMessage[0] + splitMessage[1] + splitMessage[2]);
-			 * System.out.println();
-			 */
-
+			
 			System.out.print("Client has received: ");
 			System.out.println(message);
-
-			// System.out.print("ONCE ");
 
 			switch (command) {
 			case "REGISTER":
@@ -209,9 +202,9 @@ public class socketHandler extends Thread {
 	 * splitMessage[]) {
 	 * 
 	 * }
-	 */
-
-	/*
+	 *
+	 *
+	 *
 	 * public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
 	 * 
 	 * client.registered = false; //client.deRegClientSem.release();

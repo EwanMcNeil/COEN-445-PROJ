@@ -48,7 +48,6 @@ class ClientHandler extends Thread {
 				String name = splitMessage[2];
 
 				if (startUp) {
-					// System.out.println("Startup");
 					// REGISTERED RQ#
 					registerClient(splitMessage);
 				}
@@ -123,7 +122,6 @@ class ClientHandler extends Thread {
 				this.clientAddress = InetAddress.getByName(hostName[1]);
 				System.out.println("if clientAddress: " + clientAddress);
 			} else {
-				// System.out.println("hiiii " + splitMessage[1].getBytes());
 				this.clientAddress = InetAddress.getByName(splitMessage[3]);
 				System.out.println("else clientAddress: " + clientAddress);
 			}

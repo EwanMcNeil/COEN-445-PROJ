@@ -128,13 +128,6 @@ public class Client {
 
 		response = new Semaphore(0);
 
-		/*
-		 * echoSem = new Semaphore(0); publishSem = new Semaphore(0); upSubSem = new
-		 * Semaphore(0); upClientSem = new Semaphore(0); regClientSem = new
-		 * Semaphore(0); deRegClientSem = new Semaphore(0); /*
-		 * 
-		 * 
-		 */
 		registered = false;
 		updated = false;
 		deRegistered = false;
@@ -142,8 +135,6 @@ public class Client {
 		socketCreation = true;
 		publish = true;
 		portError = false;
-
-		// InetAddress address = InetAddress.getByName(hostName);
 
 		try {
 			socket = new DatagramSocket(clientPort, clientIP);
@@ -253,6 +244,11 @@ public class Client {
 			String input = console.nextLine();
 
 			String splitInput[] = input.split(" ");
+			
+			if(splitInput.length > 1) {
+				System.out.println("Error: This is not a valid command!");
+				this.commandInput(socket);
+			}
 
 			String command = splitInput[0].toUpperCase().replace("_", "-");
 
@@ -583,9 +579,6 @@ public class Client {
 		String message = console.nextLine();
 
 		String sendingMessage = "ECHO " + RQ + " " + clientName + " " + message;
-		/*
-		 * System.out.print("CLIENT send: "); System.out.println(sendingMessage);
-		 */
 
 		byte[] requestbuffer = sendingMessage.getBytes();
 

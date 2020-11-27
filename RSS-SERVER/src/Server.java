@@ -1,6 +1,5 @@
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,7 +9,6 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.*;
@@ -125,7 +123,6 @@ public class Server {
 					break;
 
 				case "START-SERVING":
-					// System.out.println("START SERVING Serving: " + Boolean.valueOf(isServing));
 					isServing = true;
 					System.out.println("Serving: " + Boolean.valueOf(isServing));
 					servingTimer(socket);
@@ -210,7 +207,6 @@ public class Server {
 
 		if (file.exists() && !file.isDirectory()) {
 			isStarting = false;
-			// System.out.println("File does exist");
 
 			reader = new BufferedReader(new FileReader(file_name));
 

@@ -473,6 +473,8 @@ public class Server {
 						messageFlags.get(i).release();
 					}
 					else {
+						
+						if(isServing) {
 						String message1 = "PORT-ERROR " + splitMessage[1] + " PORT DOES NOT MATCH UP";
 						
 						
@@ -485,6 +487,7 @@ public class Server {
 							socket.send(response1);
 						} catch (IOException e) {
 						
+						}
 						}
 					}
 					}

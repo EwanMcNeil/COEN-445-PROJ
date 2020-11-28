@@ -305,16 +305,12 @@ public class Client {
 		printSem.release();
 		String name = console.nextLine();
 
-		String message1 = "REGISTER " + RQ + " " + name + " " + clientIP + " " + clientPort;
+		String message = "REGISTER " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
-		byte[] requestbuffer1 = message1.getBytes();
-
-		String message2 = "REGISTER " + RQ + " " + name + " " + clientIP + " " + clientPort;
-
-		byte[] requestbuffer2 = message2.getBytes();
+		byte[] requestbuffer = message.getBytes();
 
 		// Send message to server
-		DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
+		DatagramPacket request1 = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
 		try {
 			socket.send(request1);
 		} catch (IOException e) {
@@ -322,7 +318,7 @@ public class Client {
 			e.printStackTrace();
 		}
 
-		DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
+		DatagramPacket request2 = new DatagramPacket(requestbuffer, requestbuffer.length, hostName2, Port2);
 		try {
 			socket.send(request2);
 		} catch (IOException e) {
@@ -394,14 +390,14 @@ public class Client {
 		String name = console.nextLine();
 		
 		if(currentHost != null && currentPort != -1) {
-			String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
+			String message = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
-			byte[] requestbuffer1 = message1.getBytes();
+			byte[] requestbuffer = message.getBytes();
 			
 			// Send message to server
-			DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, currentHost, currentPort);
+			DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
 			try {
-				socket.send(request1);
+				socket.send(request);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -409,16 +405,12 @@ public class Client {
 		}
 		
 		else {
-			String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
+			String message = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
-			byte[] requestbuffer1 = message1.getBytes();
-
-			String message2 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
-
-			byte[] requestbuffer2 = message2.getBytes();
+			byte[] requestbuffer = message.getBytes();
 
 			// Send message to server
-			DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
+			DatagramPacket request1 = new DatagramPacket(requestbuffer, requestbuffer.length, hostName1, Port1);
 			try {
 				socket.send(request1);
 			} catch (IOException e) {
@@ -427,7 +419,7 @@ public class Client {
 			}
 
 			// Send message to server
-			DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
+			DatagramPacket request2 = new DatagramPacket(requestbuffer, requestbuffer.length, hostName2, Port2);
 			try {
 				socket.send(request2);
 			} catch (IOException e) {
@@ -449,7 +441,7 @@ public class Client {
 		}
 
 		if (portError) {
-			System.out.println("portError resarting the client");
+			System.out.println("portError restarting the client");
 			startUp = true;
 			try {
 				portError = false;
@@ -543,9 +535,6 @@ public class Client {
 		// have a check here for if the subject is in its thing
 
 		String sendingMessage = "PUBLISH " + RQ + " " + clientName + " " + subject + " " + message;
-		/*
-		 * System.out.print("CLIENT send: "); System.out.println(sendingMessage);
-		 */
 
 		byte[] requestbuffer = sendingMessage.getBytes();
 

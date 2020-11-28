@@ -81,7 +81,7 @@ public class Server {
 
 	public void servingTimer(DatagramSocket socket){
 		
-		long howLong = 1000*20; //1min
+		long howLong = 1000*60; //1min
 		//long howLong = 10000; //10 sec
 		Timer timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -119,14 +119,6 @@ public void timeToServeThreadRequest(DatagramSocket socket){
 		
     }
 	
-
-//			@Override
-//			public void run() {
-//				System.out.println("Time to stop serving");
-//				changeServer(socket);
-//			}
-//		}, howLong);
-//	}
 
 	private void service() throws IOException {
 		socket = new DatagramSocket(port);

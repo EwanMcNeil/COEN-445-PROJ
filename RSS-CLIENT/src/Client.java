@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -38,8 +39,8 @@ public class Client {
 	boolean portError;
 	DatagramSocket socket;
 
-	public InetAddress currentHost;
-	public int currentPort;
+	public InetAddress currentHost = null;
+	public int currentPort = -1;
 	public boolean publish;
 
 	public int getRQ() {
@@ -391,31 +392,48 @@ public class Client {
 		printSem.release();
 
 		String name = console.nextLine();
+		
+		if(currentHost != null && currentPort != -1) {
+			String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
-		String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
-
-		byte[] requestbuffer1 = message1.getBytes();
-
-		String message2 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
-
-		byte[] requestbuffer2 = message2.getBytes();
-
-		// Send message to server
-		DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
-		try {
-			socket.send(request1);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			byte[] requestbuffer1 = message1.getBytes();
+			
+			// Send message to server
+			DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, currentHost, currentPort);
+			try {
+				socket.send(request1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
+		else {
+			String message1 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
-		// Send message to server
-		DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
-		try {
-			socket.send(request2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			byte[] requestbuffer1 = message1.getBytes();
+
+			String message2 = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
+
+			byte[] requestbuffer2 = message2.getBytes();
+
+			// Send message to server
+			DatagramPacket request1 = new DatagramPacket(requestbuffer1, requestbuffer1.length, hostName1, Port1);
+			try {
+				socket.send(request1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			// Send message to server
+			DatagramPacket request2 = new DatagramPacket(requestbuffer2, requestbuffer2.length, hostName2, Port2);
+			try {
+				socket.send(request2);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
 		boolean acquired = response.tryAcquire(60, TimeUnit.SECONDS);

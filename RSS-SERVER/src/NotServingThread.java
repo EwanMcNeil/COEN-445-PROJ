@@ -20,6 +20,11 @@ public class NotServingThread extends Thread {
 				input = console.nextLine();
 
 				String splitInput[] = input.split(" ");
+				
+				if(splitInput.length < 3) {
+					System.out.println("Missing Input");
+					run();
+				}
 
 				String command = splitInput[0].toUpperCase().replace("_", "-");
 				

@@ -113,17 +113,12 @@ class ClientHandler extends Thread {
 		String message = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " "
 				+ splitMessage[4];
 
-		System.out.println("splitMessage: " + splitMessage[0] + " " + splitMessage[1] + " " + splitMessage[2] + " "
-				+ splitMessage[3] + " " + splitMessage[4]);
-
 		try {
 			if (splitMessage[3].contains("/")) {
 				String hostName[] = splitMessage[3].split("/");
 				this.clientAddress = InetAddress.getByName(hostName[1]);
-				System.out.println("if clientAddress: " + clientAddress);
 			} else {
 				this.clientAddress = InetAddress.getByName(splitMessage[3]);
-				System.out.println("else clientAddress: " + clientAddress);
 			}
 
 		} catch (UnknownHostException e) {
@@ -132,9 +127,6 @@ class ClientHandler extends Thread {
 		}
 
 		this.clientPort = Integer.parseInt(splitMessage[4]);
-
-		System.out.println("clientPort: " + clientPort);
-		System.out.println("clientAddress: " + clientAddress);
 
 		byte[] buffer = message.getBytes();
 

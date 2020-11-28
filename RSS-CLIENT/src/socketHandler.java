@@ -120,8 +120,9 @@ public class socketHandler extends Thread {
 				break;
 			case "PUBLISH-DENIED":
 
-				if (splitMessage[2] == "PORT_ERROR") {
+				if (splitMessage[2].equals("PORT_ERROR")) {
 					client.startUp = true;
+					client.portError = true;
 				} else {
 					client.publish = false;
 				}

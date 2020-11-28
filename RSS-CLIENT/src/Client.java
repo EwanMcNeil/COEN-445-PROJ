@@ -562,7 +562,8 @@ public class Client {
 			}
 
 		}
-
+		
+		printSem.acquire();
 		if (!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
 			publish = true;

@@ -142,8 +142,8 @@ public class Client {
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(0);
 		}
-
 	}
 
 	// client needs localhost 10011 localhost 10012

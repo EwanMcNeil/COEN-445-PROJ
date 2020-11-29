@@ -181,9 +181,9 @@ public class Server {
 			try {
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
-
+				
 				socket.receive(requestPacket);
-
+				
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
@@ -192,10 +192,12 @@ public class Server {
 				System.out.println(message);
 
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
+				
+				
+				/*if(isServing)
+					requestSign(socket);
 
-				requestSign(socket);
-
-				if (noSignOfA) {
+				if (noSignOfA && isServing) {
 					
 					String message1 = "There is only one server running. Try again later!";
 
@@ -212,7 +214,7 @@ public class Server {
 					}
 				}
 
-				else {
+				else {*/
 					switch (command) {
 					case "REGISTER":
 					case "REGISTERED":
@@ -270,7 +272,7 @@ public class Server {
 						break;
 
 					}
-				}
+				//}
 
 			} catch (Exception e) {
 				// here an exception causes the program to crash if out of bounds
@@ -616,8 +618,6 @@ public class Server {
 		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
 		String message2 = "START-SERVING";
 
-		// System.out.println(Server2);
-
 		byte[] buffer = message.getBytes();
 		byte[] buffer2 = message2.getBytes();
 
@@ -705,7 +705,7 @@ public class Server {
 
 		port = Integer.parseInt(input[2]);
 
-		writeClientsFiles();
+		//writeClientsFiles();
 
 		String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
 
@@ -741,7 +741,7 @@ public class Server {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Request to change sent to: IP: " + Server2 + "Post: " + Port2);
+		System.out.println("Request to change sent to: IP: " + Server2 + " Port: " + Port2);
 		goodToChange = false;
 		timeToServeThreadRequest(socket);
 	}
@@ -779,6 +779,7 @@ public class Server {
 		}
 		System.out.println("Request for a sign sent");
 		noSignOfA = true;
+		//noSignOfA = false;
 		signTimerRequest(socket);
 	}
 

@@ -285,7 +285,7 @@ public class Client {
 				System.out.println("SUBJECTS");
 				System.out.println("PUBLISH");
 				System.out.println("UPDATE");
-				System.out.println("ECHO");
+				//System.out.println("ECHO");
 				System.out.println("SERVING");
 				break;
 

@@ -245,8 +245,8 @@ public class Client {
 			String input = console.nextLine();
 
 			String splitInput[] = input.split(" ");
-			
-			if(splitInput.length > 1) {
+
+			if (splitInput.length > 1) {
 				System.out.println("Error: This is not a valid command!");
 				this.commandInput(socket);
 			}
@@ -388,12 +388,12 @@ public class Client {
 		printSem.release();
 
 		String name = console.nextLine();
-		
-		if(currentHost != null && currentPort != -1) {
+
+		if (currentHost != null && currentPort != -1) {
 			String message = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
 			byte[] requestbuffer = message.getBytes();
-			
+
 			// Send message to server
 			DatagramPacket request = new DatagramPacket(requestbuffer, requestbuffer.length, currentHost, currentPort);
 			try {
@@ -403,7 +403,7 @@ public class Client {
 				e.printStackTrace();
 			}
 		}
-		
+
 		else {
 			String message = "UPDATE " + RQ + " " + name + " " + clientIP + " " + clientPort;
 
@@ -562,7 +562,7 @@ public class Client {
 			}
 
 		}
-		
+
 		printSem.acquire();
 		if (!publish) {
 			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");

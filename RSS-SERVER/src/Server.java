@@ -29,8 +29,6 @@ public class Server {
 
 	static boolean goodToChange = false;
 	static boolean noSignOfA = true;
-	
-	
 
 	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 		try {
@@ -79,92 +77,88 @@ public class Server {
 		}
 	}
 
+	public void servingTimer(DatagramSocket socket) {
 
-	public void servingTimer(DatagramSocket socket){
-		
-		long howLong = 1000*60; //1min
-		//long howLong = 10000; //10 sec
+		long howLong = 1000 * 60; // 1min
+		// long howLong = 10000; //10 sec
 		Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-
-            @Override
-            public void run() {
-            	System.out.println("Time to stop serving");
-            	requestChanging(socket);
-            	
-            }
-        }, howLong);
-		
-    }
-	
-public void timeToServeThreadRequest(DatagramSocket socket){
-		
-		long howLong = 1000*5; //5sec
-		//long howLong = 10000; //10 sec
-		Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
+		timer.schedule(new TimerTask() {
 
 			@Override
-            public void run() {
-            	if(goodToChange) {
-            		System.out.println("Changing Server");
-            		changeServer(socket);
-            	}
-            	else {
-            		System.out.println("Changing Resquest not received, will continue serving");
-            		servingTimer(socket);
-            	}
-        		
-            }
-        }, howLong);
-		
-    }
+			public void run() {
+				System.out.println("Time to stop serving");
+				requestChanging(socket);
+
+			}
+		}, howLong);
+
+	}
+
+	public void timeToServeThreadRequest(DatagramSocket socket) {
+
+		long howLong = 1000 * 5; // 5sec
+		// long howLong = 10000; //10 sec
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				if (goodToChange) {
+					System.out.println("Changing Server");
+					changeServer(socket);
+				} else {
+					System.out.println("Changing Resquest not received, will continue serving");
+					servingTimer(socket);
+				}
+
+			}
+		}, howLong);
+
+	}
 
 //Timer starting when a server stops serving
-public void notServingTimer(DatagramSocket socket){
-	
-	long howLong = 1000*30; //5sec
-	System.out.println("Not serving timer on");
-	//long howLong = 10000; //10 sec
-	Timer timer = new Timer();
-  timer.schedule(new TimerTask() {
+	public void notServingTimer(DatagramSocket socket) {
 
-		@Override
-      public void run() {
-      	if(noSignOfA && !isServing) {
-      		System.out.println("No sign of serving server, sending request");
-      		requestSign(socket);
-      	}
-      	
-  		
-      }
-  }, howLong);
-	
-}
-public void signTimerRequest(DatagramSocket socket){
-	
-	long howLong = 1000*5; //5sec
-	//long howLong = 10000; //10 sec
-	Timer timer = new Timer();
-  timer.schedule(new TimerTask() {
+		long howLong = 1000 * 30; // 5sec
+		System.out.println("Not serving timer on");
+		// long howLong = 10000; //10 sec
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
 
-		@Override
-      public void run() {
-      	if(noSignOfA) {
-      		System.out.println("Taking service, no sign of other server");
-      		specialOperationTakeService(socket);
-      	}
-      	else {
-      		System.out.println("Sign received, false alarm");
-      		notServingTimer(socket);
-      		noSignOfA = true;
-      	}
-  		
-      }
-  }, howLong);
-	
-}
-	
+			@Override
+			public void run() {
+				if (noSignOfA && !isServing) {
+					System.out.println("No sign of serving server, sending request");
+					requestSign(socket);
+				}
+
+			}
+		}, howLong);
+
+	}
+
+	public void signTimerRequest(DatagramSocket socket) {
+
+		long howLong = 1000 * 5; // 5sec
+		// long howLong = 10000; //10 sec
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+
+			@Override
+			public void run() {
+				if (noSignOfA) {
+					System.out.println("Taking service, no sign of other server");
+					specialOperationTakeService(socket);
+				} else {
+					System.out.println("Sign received, false alarm");
+					notServingTimer(socket);
+					noSignOfA = true;
+				}
+
+			}
+		}, howLong);
+
+	}
 
 	private void service() throws IOException {
 		socket = new DatagramSocket(port);
@@ -180,7 +174,6 @@ public void signTimerRequest(DatagramSocket socket){
 			notServingTimer(socket);
 			thread.start();
 		}
-
 
 		while (true) {
 			DatagramPacket requestPacket = null;
@@ -200,67 +193,83 @@ public void signTimerRequest(DatagramSocket socket){
 
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
 
-				switch (command) {
-				case "REGISTER":
-				case "REGISTERED":
-					registerClient(socket, splitMessage, requestPacket);
-					break;
+				requestSign(socket);
 
-				case "DE-REGISTER":
-					deRegisterClient(socket, splitMessage, requestPacket);
-					break;
+				if (noSignOfA) {
+					
+					String message1 = "There is only one server running. Try again later!";
 
-				case "START-SERVING":
-					isServing = true;
-					System.out.println("Serving: " + Boolean.valueOf(isServing));
-					servingTimer(socket);
-					break;
+					byte[] buffer = message1.getBytes();
 
-				case "UPDATE-SERVER":
+					DatagramPacket response = new DatagramPacket(buffer, buffer.length, requestPacket.getAddress(),
+							requestPacket.getPort());
+
 					try {
-						if (splitMessage[1].contains("/")) {
-							String hostName[] = splitMessage[1].split("/");
-							Server2 = InetAddress.getByName(hostName[1]);
-						} else {
-
-							Server2 = InetAddress.getByName(splitMessage[1]);
-						}
-
-
-					} catch (UnknownHostException e) {
+						socket.send(response);
+					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+				}
 
-					Port2 = Integer.parseInt(splitMessage[2]);
-					break;
+				else {
+					switch (command) {
+					case "REGISTER":
+					case "REGISTERED":
+						registerClient(socket, splitMessage, requestPacket);
+						break;
 
-				case "PUBLISH":
-					publish(socket, splitMessage, requestPacket);
-					break;
+					case "DE-REGISTER":
+						deRegisterClient(socket, splitMessage, requestPacket);
+						break;
 
-			
-						
-	
-				case "READY-TO-CHANGE":
-					readyToChange(socket);
-					break;
-				case "CHANGE-REQUEST-RECEIVED":
-					goodToChange = true;
-					break;
-				case "STILL-THERE":
-					yesStillThere(socket);
-					break;
-				case "YES":
-					noSignOfA = false;
-					break;
-						
-						
+					case "START-SERVING":
+						isServing = true;
+						System.out.println("Serving: " + Boolean.valueOf(isServing));
+						servingTimer(socket);
+						break;
+
+					case "UPDATE-SERVER":
+						try {
+							if (splitMessage[1].contains("/")) {
+								String hostName[] = splitMessage[1].split("/");
+								Server2 = InetAddress.getByName(hostName[1]);
+							} else {
+
+								Server2 = InetAddress.getByName(splitMessage[1]);
+							}
+
+						} catch (UnknownHostException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+						Port2 = Integer.parseInt(splitMessage[2]);
+						break;
+
+					case "PUBLISH":
+						publish(socket, splitMessage, requestPacket);
+						break;
+
+					case "READY-TO-CHANGE":
+						readyToChange(socket);
+						break;
+					case "CHANGE-REQUEST-RECEIVED":
+						goodToChange = true;
+						break;
+					case "STILL-THERE":
+						yesStillThere(socket);
+						break;
+					case "YES":
+						noSignOfA = false;
+						break;
+
 					default:
 
 						otherRequests(socket, splitMessage, requestPacket);
 						break;
 
+					}
 				}
 
 			} catch (Exception e) {
@@ -640,58 +649,55 @@ public void signTimerRequest(DatagramSocket socket){
 		thread.start();
 		notServingTimer(socket);
 	}
+
 	private void specialOperationTakeService(DatagramSocket socket) {
-		
-		
+
 		String message = "CHANGE-SERVER" + " " + Address + " " + port;
 		String message2 = "STOP-SERVING";
-		
 
 		byte[] buffer = message.getBytes();
 		byte[] buffer2 = message2.getBytes();
-		
+
 		for (int i = 0; i < clientHandlers.size(); i++) {
-			
-			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientHandlers.get(i).clientAddress, clientHandlers.get(i).clientPort);
-			
+
+			DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientHandlers.get(i).clientAddress,
+					clientHandlers.get(i).clientPort);
+
 			try {
 				socket.send(response);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-		}
-		
-		
-		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
-		try {
-			socket.send(ServerResponse);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		
+		}
+
+		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
+
+		try {
+			socket.send(ServerResponse);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 		Server.isServing = true;
 		System.out.println("Serving: " + Boolean.valueOf(isServing));
 		servingTimer(socket);
-		
+
 	}
 
 	public void updateServer(DatagramSocket socket, String[] input) {
-		
+
 		System.out.println("New IP address: " + input[1] + " New port: " + input[2]);
-		
-		
+
 		try {
-			if(input[1].contains("/")) {
+			if (input[1].contains("/")) {
 				String hostName[] = input[1].split("/");
 				Address = InetAddress.getByName(hostName[1]);
-			}
-			else {
+			} else {
 				Address = InetAddress.getByName(input[1]);
 			}
-			
+
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -699,18 +705,20 @@ public void signTimerRequest(DatagramSocket socket){
 
 		port = Integer.parseInt(input[2]);
 
+		writeClientsFiles();
+
 		String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
-		
+
 		byte[] buffer2 = message2.getBytes();
-		
+
 		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 		try {
 			socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		try {
 			this.service();
 		} catch (IOException e) {
@@ -720,91 +728,88 @@ public void signTimerRequest(DatagramSocket socket){
 	}
 
 	public void requestChanging(DatagramSocket socket) {
-		
+
 		String message2 = "READY-TO-CHANGE";
-		
+
 		byte[] buffer2 = message2.getBytes();
-		
+
 		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 		try {
 			socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println("Request to change sent to: IP: " + Server2 + "Post: " + Port2);
-		goodToChange= false;
+		goodToChange = false;
 		timeToServeThreadRequest(socket);
 	}
-	
+
 	public void yesStillThere(DatagramSocket socket) {
-		
+
 		String message2 = "YES";
-		
+
 		byte[] buffer2 = message2.getBytes();
-		
+
 		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 		try {
 			socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
-	
-	
+
 	public void requestSign(DatagramSocket socket) {
-		
+
 		String message2 = "STILL-THERE";
-		
+
 		byte[] buffer2 = message2.getBytes();
-		
+
 		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 		try {
 			socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		System.out.println("Request for a sign sent");
-		noSignOfA= true;
+		noSignOfA = true;
 		signTimerRequest(socket);
 	}
 
-
 	public void readyToChange(DatagramSocket socket) {
-		
+
 		String message2 = "CHANGE-REQUEST-RECEIVED";
-		
+
 		byte[] buffer2 = message2.getBytes();
-		
+
 		DatagramPacket ServerResponse = new DatagramPacket(buffer2, buffer2.length, Server2, Port2);
-				
+
 		try {
 			socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-	}
-		
-		private static StringBuilder formatMessage(byte[] a) {
-			if (a == null)
-				return null;
-			
-			StringBuilder ret = new StringBuilder();
-			int i = 0;
-			while (a[i] != 0) {
-				ret.append((char) a[i]);
-				i++;
-			}
-			return ret;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-
 	}
+
+	private static StringBuilder formatMessage(byte[] a) {
+		if (a == null)
+			return null;
+
+		StringBuilder ret = new StringBuilder();
+		int i = 0;
+		while (a[i] != 0) {
+			ret.append((char) a[i]);
+			i++;
+		}
+		return ret;
+	}
+
+}

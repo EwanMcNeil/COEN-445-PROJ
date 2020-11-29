@@ -4,6 +4,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 
 public class socketHandler extends Thread {
@@ -57,7 +59,7 @@ public class socketHandler extends Thread {
 			String splitMessage[] = message.split(" ");
 
 			String command = splitMessage[0].toUpperCase().replace("_", "-");
-			
+
 			System.out.print("Client has received: ");
 			System.out.println(message);
 
@@ -173,6 +175,14 @@ public class socketHandler extends Thread {
 				printSem.release();
 
 				break;
+
+			case "THERE":
+				try {
+					client.service();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 			default:
 				System.out.println("Server response not recognized.");

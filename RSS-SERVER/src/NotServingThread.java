@@ -10,35 +10,33 @@ public class NotServingThread extends Thread {
 		this.socket = socket;
 	}
 
-			
-			@Override
-		    public void run(){
-		    	String input;
-				Scanner console = new Scanner(System.in);
-		    	System.out.println("Enter the next command to be sent: (UPDATE-SERVER)");
-		    	
-				input = console.nextLine();
+	@Override
+	public void run() {
+		String input;
+		Scanner console = new Scanner(System.in);
+		System.out.println("Enter the next command to be sent: (UPDATE-SERVER)");
 
-				String splitInput[] = input.split(" ");
-				
-				if(splitInput.length < 3) {
-					System.out.println("Missing Input");
-					run();
-				}
+		input = console.nextLine();
 
-				String command = splitInput[0].toUpperCase().replace("_", "-");
-				
-				System.out.println(splitInput[0] + " " + splitInput[1] + " " + splitInput[2] + " length: " + splitInput.length);
-				
-				if(command.equals("UPDATE-SERVER") && splitInput.length == 3) {
-					server.updateServer(socket,splitInput);
-				}
-				else {
-					System.out.println("Invalid command!");
-				}
-				if(server.isServing) {
-					Thread.interrupted();
-				}
-		    }
+		String splitInput[] = input.split(" ");
+
+		if (splitInput.length < 3) {
+			System.out.println("Missing Input");
+			run();
+		}
+
+		String command = splitInput[0].toUpperCase().replace("_", "-");
+
+		System.out.println(splitInput[0] + " " + splitInput[1] + " " + splitInput[2] + " length: " + splitInput.length);
+
+		if (command.equals("UPDATE-SERVER") && splitInput.length == 3) {
+			server.updateServer(socket, splitInput);
+		} else {
+			System.out.println("Invalid command!");
+		}
+		if (server.isServing) {
+			Thread.interrupted();
+		}
+	}
 
 }

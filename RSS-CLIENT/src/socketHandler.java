@@ -12,21 +12,10 @@ public class socketHandler extends Thread {
 	DatagramSocket socket;
 	Client client;
 	Semaphore printSem;
-	Semaphore echoSem;
-	Semaphore publishSem;
-	Semaphore upSubSem;
-	Semaphore upClientSem;
-	Semaphore regClientSem;
-
 	public socketHandler(DatagramSocket s, Client c, Semaphore Sem) {
 		this.socket = s;
 		this.client = c;
 		this.printSem = Sem;
-		this.echoSem = c.echoSem;
-		this.publishSem = c.publishSem;
-		this.upSubSem = c.upSubSem;
-		this.upClientSem = c.upClientSem;
-		this.regClientSem = c.regClientSem;
 	}
 
 	@Override
@@ -197,6 +186,8 @@ public class socketHandler extends Thread {
 	}
 
 	public void updatedApproved(DatagramPacket requestPacket, String splitMessage[]) {
+		
+		client.RQ = Integer.parseInt(splitMessage[1]);
 		client.currentHost = requestPacket.getAddress();
 		client.currentPort = requestPacket.getPort();
 	}

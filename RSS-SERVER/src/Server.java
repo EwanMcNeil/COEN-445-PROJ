@@ -338,6 +338,7 @@ public class Server {
 
 				String splitLine[] = line.split(" ");
 
+				int localRQ = Integer. parseInt(splitLine[1]);
 				if (line.contains(",")) {
 					subjects = splitLine[2].split(",");
 				}
@@ -348,12 +349,12 @@ public class Server {
 				if (splitLine.length > 4) {
 					client = new ClientHandler(socket, InetAddress.getByName(splitLine[3].replace("/", "")),
 							Integer.parseInt(splitLine[4]), messageFlag, splitLine[0], this,
-							new ArrayList<>(Arrays.asList(subjects)), false);
+							new ArrayList<>(Arrays.asList(subjects)), false, localRQ);
 				}
 
 				else {
 					client = new ClientHandler(socket, InetAddress.getByName(splitLine[2].replace("/", "")),
-							Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false);
+							Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false,localRQ);
 				}
 
 				client.start();
@@ -386,7 +387,7 @@ public class Server {
 			messageFlags.add(messageFlag);
 
 			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this,
-					subjects, true);
+					subjects, true,0);
 
 			// Invoking the start() method
 			t.start();

@@ -36,7 +36,10 @@ _in windows issue this command_
 ## Running a Client
 _in the directory of the Client jar file issue the following command on mac_
 
-Java -jar Server.jar 10011 1 localhost 10012
+Java -jar Client.jar localhost 54443 localhost 10011 localhost 10012
+
+_Where the IP and ports are in the format_
+ClientIP ClientPort ServerOneIP ServerOnePort ServerTwoIP ServerTwoPort
 
 _in windows issue this command_
 

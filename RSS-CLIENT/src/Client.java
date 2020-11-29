@@ -23,12 +23,6 @@ public class Client {
 	int Port2;
 	Semaphore printSem;
 	ArrayList<String> subjects;
-	Semaphore echoSem;
-	Semaphore publishSem;
-	Semaphore upSubSem;
-	Semaphore upClientSem;
-	Semaphore regClientSem;
-	Semaphore deRegClientSem;
 	Semaphore response;
 	boolean registered;
 	boolean updated;
@@ -338,6 +332,7 @@ public class Client {
 		else {
 			if (registered) {
 				System.out.println("Registration is good, you may proceed.");
+				RQ += 1;
 				clientName = name;
 
 			}

@@ -23,12 +23,12 @@ class ClientHandler extends Thread {
 
 	// Constructor
 	public ClientHandler(DatagramSocket s, InetAddress address, int port, Semaphore newMessageFlag, String Name,
-			Server server, ArrayList<String> subjects, boolean startUp) {
+			Server server, ArrayList<String> subjects, boolean startUp, int RQ) {
 		this.s = s;
 		this.request = null;
 		setName(Name);
 		this.name = Name;
-		this.RQ = 0;
+		this.RQ = RQ;
 		this.startUp = startUp;
 		this.server = server;
 		messageFlag = newMessageFlag;
@@ -110,7 +110,7 @@ class ClientHandler extends Thread {
 	private void updateClient(String splitMessage[]) {
 		String name = splitMessage[2];
 
-		String message = "UPDATE-CONFIRMED " + splitMessage[1] + " " + splitMessage[2] + " " + splitMessage[3] + " "
+		String message = "UPDATE-CONFIRMED " + RQ + " " + splitMessage[2] + " " + splitMessage[3] + " "
 				+ splitMessage[4];
 
 		try {

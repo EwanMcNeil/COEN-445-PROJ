@@ -119,7 +119,7 @@ public class Server {
 //Timer starting when a server stops serving
 	public void notServingTimer(DatagramSocket socket) {
 
-		long howLong = 1000 * 30; // 5sec
+		long howLong = 1000 * 90; // 5sec
 		System.out.println("Not serving timer on");
 		// long howLong = 10000; //10 sec
 		Timer timer = new Timer();
@@ -613,6 +613,10 @@ public class Server {
 			}
 		}
 	}
+	
+	
+	
+	
 
 	private void changeServer(DatagramSocket socket) {
 		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
@@ -705,7 +709,7 @@ public class Server {
 
 		port = Integer.parseInt(input[2]);
 
-		//writeClientsFiles();
+		writeClientsFiles();
 
 		String message2 = "UPDATE-SERVER" + " " + input[1] + " " + input[2];
 

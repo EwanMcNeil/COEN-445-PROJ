@@ -11,6 +11,15 @@ import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+
+
+//
+//The client handles all the inputs from the user and sends to the server
+///while the socket handler ensures the responses from the server and the
+//reception of publishes
+//
+
+
 public class Client {
 	int RQ;
 	Boolean startUp;
@@ -37,77 +46,6 @@ public class Client {
 	public int currentPort = -1;
 	public boolean publish;
 
-	public int getRQ() {
-		return RQ;
-	}
-
-	public void setRQ(int rQ) {
-		RQ = rQ;
-	}
-
-	public Boolean getStartUp() {
-		return startUp;
-	}
-
-	public void setStartUp(Boolean startUp) {
-		this.startUp = startUp;
-	}
-
-	public InetAddress getHostName1() {
-		return hostName1;
-	}
-
-	public void setHostName1(InetAddress hostName1) {
-		this.hostName1 = hostName1;
-	}
-
-	public InetAddress getHostName2() {
-		return hostName2;
-	}
-
-	public void setHostName2(InetAddress hostName2) {
-		this.hostName2 = hostName2;
-	}
-
-	public String getClientName() {
-		return clientName;
-	}
-
-	public void setClientName(String clientName) {
-		this.clientName = clientName;
-	}
-
-	public int getPort1() {
-		return Port1;
-	}
-
-	public void setPort1(int port1) {
-		Port1 = port1;
-	}
-
-	public int getPort2() {
-		return Port2;
-	}
-
-	public void setPort2(int port2) {
-		Port2 = port2;
-	}
-
-	public InetAddress getCurrentHost() {
-		return currentHost;
-	}
-
-	public void setCurrentHost(InetAddress currentHost) {
-		this.currentHost = currentHost;
-	}
-
-	public int getCurrentPort() {
-		return currentPort;
-	}
-
-	public void setCurrentPort(int currentPort) {
-		this.currentPort = currentPort;
-	}
 
 	public Client(InetAddress ClientIP, int ClientPort, InetAddress IP1, int port1, InetAddress IP2, int port2) {
 		RQ = 0;
@@ -227,6 +165,11 @@ public class Client {
 			ex.printStackTrace();
 		}
 	}
+	
+	
+	//
+	//main looping command input that has functions for each of the possible inputs from the client
+	//
 
 	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
 		Scanner console = new Scanner(System.in);

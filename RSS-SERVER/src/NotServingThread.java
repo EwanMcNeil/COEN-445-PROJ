@@ -1,6 +1,10 @@
 import java.net.DatagramSocket;
 import java.util.Scanner;
 
+
+//
+//Not serving thread is used when the server is the secondary one and needs to intake commands
+//
 public class NotServingThread extends Thread {
 	Server server;
 	DatagramSocket socket;

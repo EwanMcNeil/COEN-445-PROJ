@@ -44,7 +44,6 @@ public class Server {
 	}
 
 	// Main function starts up server
-	// server needs 10011 1 localhost 10012
 	public static void main(String[] args) {
 		if (args.length < 5) {
 			System.out.println("Missing Input");
@@ -84,7 +83,7 @@ public class Server {
 
 	public void servingTimer(DatagramSocket socket) {
 
-		long howLong = 1000 * 60; // 1min
+		long howLong = 1000 * 120; // 1min
 		// long howLong = 10000; //10 sec
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
@@ -165,6 +164,11 @@ public class Server {
 
 	}
 
+	
+	///
+	///Service is the main loop of the program
+	///
+	
 	private void service() throws IOException {
 		socket = new DatagramSocket(port);
 		if (isStarting) {
@@ -198,28 +202,7 @@ public class Server {
 
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
 				
-				
-				/*if(isServing)
-					requestSign(socket);
-
-				if (noSignOfA && isServing) {
-					
-					String message1 = "There is only one server running. Try again later!";
-
-					byte[] buffer = message1.getBytes();
-
-					DatagramPacket response = new DatagramPacket(buffer, buffer.length, requestPacket.getAddress(),
-							requestPacket.getPort());
-
-					try {
-						socket.send(response);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-
-				else {*/
+		
 					switch (command) {
 					case "REGISTER":
 					case "REGISTERED":
@@ -287,6 +270,11 @@ public class Server {
 		}
 	}
 
+	
+	///
+	///database functions
+	///
+	
 	public void writeClientsFiles() {
 		FileWriter writer;
 		String output = "";
@@ -378,6 +366,11 @@ public class Server {
 		}
 	}
 
+	
+	
+	///
+	///Responding to requests functions
+	///
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
 		ArrayList<String> subjects = new ArrayList<>();
@@ -554,6 +547,11 @@ public class Server {
 		}
 	}
 
+	
+	
+	//
+	//Other requests passes client requests to client handlers
+	//
 	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) throws IOException {
 		String name = splitMessage[2];
 
@@ -810,6 +808,8 @@ public class Server {
 
 	}
 
+	
+	//Function is from the tutorial needed to turn the buffer into readable data
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;

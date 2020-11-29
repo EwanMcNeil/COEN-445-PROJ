@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.concurrent.*;
 
 //ClientHandler class 
+//there are one client handler in each server which corresponds to a client communication 
+
+
 class ClientHandler extends Thread {
 
 	final DatagramSocket s;
@@ -38,6 +41,10 @@ class ClientHandler extends Thread {
 
 	}
 
+	
+	//
+	//this is the main loop that takes in requests and diverges them to the proper functions
+	//
 	@Override
 	public void run() {
 		while (true) {
@@ -240,7 +247,8 @@ class ClientHandler extends Thread {
 		return RQ;
 	}
 
-	// A method to convert the byte array data into a string representation.
+	//This method is from the tutorial and is needed to convert
+	// the buffer from the input into strings
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;

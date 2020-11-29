@@ -8,6 +8,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 
+
+//
+//Sockethandler is needed because it needs to actively listen to the servers messages in case of a 
+//publish from another client
+//
+
 public class socketHandler extends Thread {
 	DatagramSocket socket;
 	Client client;

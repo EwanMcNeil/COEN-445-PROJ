@@ -30,9 +30,9 @@ public class Server {
 	static boolean goodToChange = false;
 	static boolean noSignOfA = true;
 
-	public Server(int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
+	public Server(String name, int port, boolean isServing, InetAddress IP, int port2) throws SocketException {
 		try {
-			Address = InetAddress.getByName("localhost");
+			Address = InetAddress.getByName(name);
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -46,24 +46,29 @@ public class Server {
 	// Main function starts up server
 	// server needs 10011 1 localhost 10012
 	public static void main(String[] args) {
-		if (args.length < 4) {
+		if (args.length < 5) {
 			System.out.println("Missing Input");
 			return;
 		}
-
-		int port = Integer.parseInt(args[0]);
 		boolean is_serving = false;
-
-		if (Integer.parseInt(args[1]) == 1)
+		
+		if (Integer.parseInt(args[0]) == 1)
 			is_serving = true;
 		else
 			is_serving = false;
+		
+		String serverIP = args[1];
 
-		String Server2_name = args[2];
-		int port2 = Integer.parseInt(args[3]);
+		int port = Integer.parseInt(args[2]);
+		
+
+		
+
+		String Server2_name = args[3];
+		int port2 = Integer.parseInt(args[4]);
 
 		try {
-			Server server = new Server(port, is_serving, InetAddress.getByName(Server2_name), port2);
+			Server server = new Server(serverIP, port, is_serving, InetAddress.getByName(Server2_name), port2);
 
 			System.out.println("Server listening on port " + port);
 			System.out.println("Serving: " + Boolean.valueOf(isServing));

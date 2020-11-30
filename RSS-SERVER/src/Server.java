@@ -434,29 +434,58 @@ public class Server {
 					clientHandlers.get(i).stop();
 					clientHandlers.remove(i);
 					messageFlags.remove(i);
+					
+
+					String message = "DE-REGISTER" + " " + RQ + " " + name;
+
+					byte[] buffer = message.getBytes();
+
+					if (isServing) {
+						DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
+
+						DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
+
+						try {
+							socket.send(response);
+							socket.send(ServerResponse);
+						} catch (IOException e) {
+							
+						}
+					}
 
 					writeClientsFiles();
+				}
+				else {
+					
+					if (isServing) {
+
+						String message1 = " ";
+
+						message1 = "PORT_ERROR " + splitMessage[1] + " PORT_ERROR";
+
+
+						byte[] buffer1 = message1.getBytes();
+
+						DatagramPacket response1 = new DatagramPacket(buffer1, buffer1.length, packet.getAddress(),
+								packet.getPort());
+
+						try {
+							socket.send(response1);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					
+					
+					
 				}
 			}
 		}
 
-		String message = "DE-REGISTER" + " " + RQ + " " + name;
-
-		byte[] buffer = message.getBytes();
-
-		if (isServing) {
-			DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
-
-			DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
-
-			try {
-				socket.send(response);
-				socket.send(ServerResponse);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		
+		
 	}
 
 	private void publish(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
@@ -540,8 +569,7 @@ public class Server {
 				try {
 					socket.send(response1);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+
 				}
 			}
 		}

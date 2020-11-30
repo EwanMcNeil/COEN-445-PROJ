@@ -315,6 +315,19 @@ public class Client {
 
 			}
 		}
+		
+		if (portError) {
+			System.out.println("portError resarting the client");
+			startUp = true;
+			try {
+				portError = false;
+				service();
+			} catch (IOException e) {
+
+			}
+
+		}
+
 
 	}
 

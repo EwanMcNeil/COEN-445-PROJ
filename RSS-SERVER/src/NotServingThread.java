@@ -1,7 +1,6 @@
 import java.net.DatagramSocket;
 import java.util.Scanner;
 
-
 //
 //Not serving thread is used when the server is the secondary one and needs to intake commands
 //
@@ -18,28 +17,32 @@ public class NotServingThread extends Thread {
 	public void run() {
 		String input;
 		Scanner console = new Scanner(System.in);
-		System.out.println("Enter the next command to be sent: (UPDATE-SERVER)");
+		while (!server.isServing) {
+			System.out.println("Enter the next command to be sent: (UPDATE-SERVER)");
 
-		input = console.nextLine();
+			input = console.nextLine();
 
-		String splitInput[] = input.split(" ");
+			String splitInput[] = input.split(" ");
 
-		if (splitInput.length < 3) {
-			System.out.println("Missing Input");
-			run();
-		}
+			if (splitInput.length < 3) {
+				System.out.println("Missing Input");
+				run();
+			}
 
-		String command = splitInput[0].toUpperCase().replace("_", "-");
+			String command = splitInput[0].toUpperCase().replace("_", "-");
 
-		System.out.println(splitInput[0] + " " + splitInput[1] + " " + splitInput[2] + " length: " + splitInput.length);
+			System.out.println(
+					splitInput[0] + " " + splitInput[1] + " " + splitInput[2] + " length: " + splitInput.length);
 
-		if (command.equals("UPDATE-SERVER") && splitInput.length == 3) {
-			server.updateServer(socket, splitInput);
-		} else {
-			System.out.println("Error: This is not a valid command!");
-		}
-		if (server.isServing) {
-			Thread.interrupted();
+			if (command.equals("UPDATE-SERVER") && splitInput.length == 3) {
+				server.updateServer(socket, splitInput);
+			} else {
+				System.out.println("Error: This is not a valid command!");
+				run();
+			}
+			if (server.isServing) {
+				Thread.interrupted();
+			}
 		}
 	}
 

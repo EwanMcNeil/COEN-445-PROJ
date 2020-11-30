@@ -157,7 +157,7 @@ class ClientHandler extends Thread {
 	}
 
 	private void updateSubjects(InetAddress clientAddress, int clientPort, String splitMessage[]) {
-		ArrayList<String> accepted_subjects = new ArrayList<>(Arrays.asList("FOOTBALL", "HOCKEY", "GOLF"));
+		ArrayList<String> accepted_subjects = new ArrayList<>(Arrays.asList("COMPUTER", "NETWORK", "MUTEX"));
 		String message = "";
 		String subjects_sent = "";
 		boolean all_in = true;

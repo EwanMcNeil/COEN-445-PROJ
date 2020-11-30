@@ -495,7 +495,7 @@ public class Client {
 
 		RQ += 1;
 
-		boolean acquired = response.tryAcquire(10, TimeUnit.SECONDS);
+		boolean acquired = response.tryAcquire(2, TimeUnit.SECONDS);
 
 		if (portError) {
 			System.out.println("portError restarting the client");

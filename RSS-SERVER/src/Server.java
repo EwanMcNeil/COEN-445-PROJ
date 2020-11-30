@@ -80,8 +80,8 @@ public class Server {
 
 	public void servingTimer(DatagramSocket socket) {
 
-		long howLong = 1000 * 120; // 1min
-		// long howLong = 10000; //10 sec
+		long howLong = 1000 * 120; // 2 minutes
+
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
@@ -98,7 +98,7 @@ public class Server {
 	public void timeToServeThreadRequest(DatagramSocket socket) {
 
 		long howLong = 1000 * 5; // 5sec
-		// long howLong = 10000; //10 sec
+		
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
@@ -120,7 +120,7 @@ public class Server {
 //Timer starting when a server stops serving
 	public void notServingTimer(DatagramSocket socket) {
 
-		long howLong = 1000 * 90; // 90 seconds
+		long howLong = 1000 * 180; // 2.5 minutes
 		System.out.println("Not serving timer on");
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
@@ -276,7 +276,7 @@ public class Server {
 			for (int j = 0; j < clientHandlers.size(); j++) {
 				ArrayList<String> subjects_list = clientHandlers.get(j).subjects;
 				String client_subjects = "";
-
+				
 				for (int k = 0; k < subjects_list.size(); k++)
 					if (k != subjects_list.size() - 1 || subjects_list.size() == 1)
 						client_subjects += subjects_list.get(k) + ",";
@@ -510,7 +510,7 @@ public class Server {
 			for (int i = 0; i < clientHandlers.size(); i++) {
 				if (!(clientHandlers.get(i).name.equals(name))) {
 
-					System.out.print(clientHandlers.get(i).name);
+					//System.out.print(clientHandlers.get(i).name);
 					if (clientHandlers.get(i).subjects.contains(subject)) {
 
 						if (isServing) {

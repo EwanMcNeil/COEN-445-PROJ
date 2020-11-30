@@ -63,7 +63,6 @@ public class socketHandler extends Thread {
 			case "REGISTERED":
 				registered(packet, splitMessage);
 				client.registered = true;
-				// regClientSem.release();
 				client.response.release();
 				break;
 
@@ -73,7 +72,6 @@ public class socketHandler extends Thread {
 				break;
 
 			case "ECHO":
-				// echoSem.release();
 				client.response.release();
 				break;
 
@@ -81,13 +79,11 @@ public class socketHandler extends Thread {
 			case "SUBJECTS-UPDATED":
 				client.subjects.add(splitMessage[3]);
 				client.subjectsBool = true;
-				// upSubSem.release();
 				client.response.release();
 				break;
 
 			case "REGISTER-DENIED":
 				client.registered = false;
-				// regClientSem.release();
 				client.response.release();
 				break;
 
@@ -95,19 +91,16 @@ public class socketHandler extends Thread {
 			case "UPDATE-CONFIRMED":
 				updatedApproved(packet, splitMessage);
 				client.clientUpdate = true;
-				// upClientSem.release();
 				client.response.release();
 				break;
 
 			case "UPDATE-DENIED":
 				client.clientUpdate = false;
-				// upClientSem.release();
 				client.response.release();
 				break;
 
 			case "SUBJECTS-REJECTED":
 				client.subjectsBool = false;
-				// upSubSem.release();
 				client.response.release();
 				break;
 			case "PORT-ERROR":
@@ -123,8 +116,6 @@ public class socketHandler extends Thread {
 				} else {
 					client.publish = false;
 				}
-
-				// publishSem.release();
 				client.response.release();
 				break;
 
@@ -198,28 +189,7 @@ public class socketHandler extends Thread {
 		client.currentPort = requestPacket.getPort();
 	}
 
-	/*
-	 * public void updatedDenied(DatagramPacket requestPacket, String
-	 * splitMessage[]) {
-	 * 
-	 * // TODO
-	 * 
-	 * }
-	 * 
-	 * public void subjectsUpdated(DatagramPacket requestPacket, String
-	 * splitMessage[]) {
-	 * 
-	 * }
-	 *
-	 *
-	 *
-	 * public void deRegister(DatagramPacket requestPacket, String splitMessage[]) {
-	 * 
-	 * client.registered = false; //client.deRegClientSem.release();
-	 * 
-	 * client.response.release(); }
-	 */
-
+	// This is from the tutorial section
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;

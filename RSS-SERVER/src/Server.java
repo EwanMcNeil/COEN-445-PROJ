@@ -50,18 +50,15 @@ public class Server {
 			return;
 		}
 		boolean is_serving = false;
-		
+
 		if (Integer.parseInt(args[0]) == 1)
 			is_serving = true;
 		else
 			is_serving = false;
-		
+
 		String serverIP = args[1];
 
 		int port = Integer.parseInt(args[2]);
-		
-
-		
 
 		String Server2_name = args[3];
 		int port2 = Integer.parseInt(args[4]);
@@ -111,7 +108,7 @@ public class Server {
 					System.out.println("Changing Server");
 					changeServer(socket);
 				} else {
-					System.out.println("Changing Resquest not received, will continue serving");
+					System.out.println("Changing resquest not received, will continue serving.");
 					servingTimer(socket);
 				}
 
@@ -123,16 +120,15 @@ public class Server {
 //Timer starting when a server stops serving
 	public void notServingTimer(DatagramSocket socket) {
 
-		long howLong = 1000 * 90; // 5sec
+		long howLong = 1000 * 90; // 90 seconds
 		System.out.println("Not serving timer on");
-		// long howLong = 10000; //10 sec
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
 			@Override
 			public void run() {
 				if (noSignOfA && !isServing) {
-					System.out.println("No sign of serving server, sending request");
+					System.out.println("No sign of serving server, sending request.");
 					requestSign(socket);
 				}
 
@@ -143,18 +139,17 @@ public class Server {
 
 	public void signTimerRequest(DatagramSocket socket) {
 
-		long howLong = 1000 * 5; // 5sec
-		// long howLong = 10000; //10 sec
+		long howLong = 1000 * 5; // 5 seconds
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 
 			@Override
 			public void run() {
 				if (noSignOfA) {
-					System.out.println("Taking service, no sign of other server");
+					System.out.println("Taking service, no sign of other server.");
 					specialOperationTakeService(socket);
 				} else {
-					System.out.println("Sign received, false alarm");
+					System.out.println("Sign received, false alarm.");
 					notServingTimer(socket);
 					noSignOfA = true;
 				}
@@ -164,11 +159,10 @@ public class Server {
 
 	}
 
-	
 	///
-	///Service is the main loop of the program
+	/// Service is the main loop of the program
 	///
-	
+
 	private void service() throws IOException {
 		socket = new DatagramSocket(port);
 		if (isStarting) {
@@ -190,9 +184,9 @@ public class Server {
 			try {
 				byte[] clientMessage = new byte[50000];
 				requestPacket = new DatagramPacket(clientMessage, clientMessage.length);
-				
+
 				socket.receive(requestPacket);
-				
+
 				String message = formatMessage(clientMessage).toString();
 
 				String splitMessage[] = message.split(" ");
@@ -201,66 +195,64 @@ public class Server {
 				System.out.println(message);
 
 				String command = splitMessage[0].toUpperCase().replace("_", "-");
-				
-		
-					switch (command) {
-					case "REGISTER":
-					case "REGISTERED":
-						registerClient(socket, splitMessage, requestPacket);
-						break;
 
-					case "DE-REGISTER":
-						deRegisterClient(socket, splitMessage, requestPacket);
-						break;
+				switch (command) {
+				case "REGISTER":
+				case "REGISTERED":
+					registerClient(socket, splitMessage, requestPacket);
+					break;
 
-					case "START-SERVING":
-						isServing = true;
-						System.out.println("Serving: " + Boolean.valueOf(isServing));
-						servingTimer(socket);
-						break;
+				case "DE-REGISTER":
+					deRegisterClient(socket, splitMessage, requestPacket);
+					break;
 
-					case "UPDATE-SERVER":
-						try {
-							if (splitMessage[1].contains("/")) {
-								String hostName[] = splitMessage[1].split("/");
-								Server2 = InetAddress.getByName(hostName[1]);
-							} else {
+				case "START-SERVING":
+					isServing = true;
+					System.out.println("Serving: " + Boolean.valueOf(isServing));
+					servingTimer(socket);
+					break;
 
-								Server2 = InetAddress.getByName(splitMessage[1]);
-							}
+				case "UPDATE-SERVER":
+					try {
+						if (splitMessage[1].contains("/")) {
+							String hostName[] = splitMessage[1].split("/");
+							Server2 = InetAddress.getByName(hostName[1]);
+						} else {
 
-						} catch (UnknownHostException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							Server2 = InetAddress.getByName(splitMessage[1]);
 						}
 
-						Port2 = Integer.parseInt(splitMessage[2]);
-						break;
-
-					case "PUBLISH":
-						publish(socket, splitMessage, requestPacket);
-						break;
-
-					case "READY-TO-CHANGE":
-						readyToChange(socket);
-						break;
-					case "CHANGE-REQUEST-RECEIVED":
-						goodToChange = true;
-						break;
-					case "STILL-THERE":
-						yesStillThere(socket);
-						break;
-					case "YES":
-						noSignOfA = false;
-						break;
-
-					default:
-
-						otherRequests(socket, splitMessage, requestPacket);
-						break;
-
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				//}
+
+					Port2 = Integer.parseInt(splitMessage[2]);
+					break;
+
+				case "PUBLISH":
+					publish(socket, splitMessage, requestPacket);
+					break;
+
+				case "READY-TO-CHANGE":
+					readyToChange(socket);
+					break;
+				case "CHANGE-REQUEST-RECEIVED":
+					goodToChange = true;
+					break;
+				case "STILL-THERE":
+					yesStillThere(socket);
+					break;
+				case "YES":
+					noSignOfA = false;
+					break;
+
+				default:
+
+					otherRequests(socket, splitMessage, requestPacket);
+					break;
+
+				}
 
 			} catch (Exception e) {
 				// here an exception causes the program to crash if out of bounds
@@ -270,11 +262,10 @@ public class Server {
 		}
 	}
 
-	
 	///
-	///database functions
+	/// database functions
 	///
-	
+
 	public void writeClientsFiles() {
 		FileWriter writer;
 		String output = "";
@@ -331,7 +322,7 @@ public class Server {
 
 				String splitLine[] = line.split(" ");
 
-				int localRQ = Integer. parseInt(splitLine[1]);
+				int localRQ = Integer.parseInt(splitLine[1]);
 				if (line.contains(",")) {
 					subjects = splitLine[2].split(",");
 				}
@@ -347,7 +338,7 @@ public class Server {
 
 				else {
 					client = new ClientHandler(socket, InetAddress.getByName(splitLine[2].replace("/", "")),
-							Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false,localRQ);
+							Integer.parseInt(splitLine[3]), messageFlag, splitLine[0], this, sub, false, localRQ);
 				}
 
 				client.start();
@@ -366,10 +357,8 @@ public class Server {
 		}
 	}
 
-	
-	
 	///
-	///Responding to requests functions
+	/// Responding to requests functions
 	///
 	private void registerClient(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
 		String name = splitMessage[2];
@@ -385,7 +374,7 @@ public class Server {
 			messageFlags.add(messageFlag);
 
 			ClientHandler t = new ClientHandler(socket, packet.getAddress(), packet.getPort(), messageFlag, name, this,
-					subjects, true,0);
+					subjects, true, 0);
 
 			// Invoking the start() method
 			t.start();
@@ -434,14 +423,14 @@ public class Server {
 					clientHandlers.get(i).stop();
 					clientHandlers.remove(i);
 					messageFlags.remove(i);
-					
 
 					String message = "DE-REGISTER" + " " + RQ + " " + name;
 
 					byte[] buffer = message.getBytes();
 
 					if (isServing) {
-						DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(), packet.getPort());
+						DatagramPacket response = new DatagramPacket(buffer, buffer.length, packet.getAddress(),
+								packet.getPort());
 
 						DatagramPacket ServerResponse = new DatagramPacket(buffer, buffer.length, Server2, Port2);
 
@@ -449,20 +438,18 @@ public class Server {
 							socket.send(response);
 							socket.send(ServerResponse);
 						} catch (IOException e) {
-							
+
 						}
 					}
 
 					writeClientsFiles();
-				}
-				else {
-					
+				} else {
+
 					if (isServing) {
 
 						String message1 = " ";
 
 						message1 = "PORT_ERROR " + splitMessage[1] + " PORT_ERROR";
-
 
 						byte[] buffer1 = message1.getBytes();
 
@@ -476,16 +463,11 @@ public class Server {
 							e.printStackTrace();
 						}
 					}
-					
-					
-					
-					
+
 				}
 			}
 		}
 
-		
-		
 	}
 
 	private void publish(DatagramSocket socket, String splitMessage[], DatagramPacket packet) {
@@ -575,10 +557,8 @@ public class Server {
 		}
 	}
 
-	
-	
 	//
-	//Other requests passes client requests to client handlers
+	// Other requests passes client requests to client handlers
 	//
 	private void otherRequests(DatagramSocket socket, String splitMessage[], DatagramPacket packet) throws IOException {
 		String name = splitMessage[2];
@@ -645,10 +625,6 @@ public class Server {
 			}
 		}
 	}
-	
-	
-	
-	
 
 	private void changeServer(DatagramSocket socket) {
 		String message = "CHANGE-SERVER" + " " + Server2 + " " + Port2;
@@ -815,7 +791,7 @@ public class Server {
 		}
 		System.out.println("Request for a sign sent");
 		noSignOfA = true;
-		//noSignOfA = false;
+		// noSignOfA = false;
 		signTimerRequest(socket);
 	}
 
@@ -836,8 +812,7 @@ public class Server {
 
 	}
 
-	
-	//Function is from the tutorial needed to turn the buffer into readable data
+	// Function is from the tutorial needed to turn the buffer into readable data
 	private static StringBuilder formatMessage(byte[] a) {
 		if (a == null)
 			return null;

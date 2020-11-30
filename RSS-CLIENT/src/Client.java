@@ -11,14 +11,11 @@ import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-
-
 //
 //The client handles all the inputs from the user and sends to the server
 ///while the socket handler ensures the responses from the server and the
 //reception of publishes
 //
-
 
 public class Client {
 	int RQ;
@@ -45,7 +42,6 @@ public class Client {
 	public InetAddress currentHost = null;
 	public int currentPort = -1;
 	public boolean publish;
-
 
 	public Client(InetAddress ClientIP, int ClientPort, InetAddress IP1, int port1, InetAddress IP2, int port2) {
 		RQ = 0;
@@ -78,7 +74,7 @@ public class Client {
 		}
 	}
 
-	// client needs localhost 10011 localhost 10012
+	// client needs localhost 600034 localhost 10011 localhost 10012
 	public static void main(String[] args) {
 		if (args.length < 6) {
 			System.out.println("Missing Input");
@@ -165,10 +161,10 @@ public class Client {
 			ex.printStackTrace();
 		}
 	}
-	
-	
+
 	//
-	//main looping command input that has functions for each of the possible inputs from the client
+	// main looping command input that has functions for each of the possible inputs
+	// from the client
 	//
 
 	private void commandInput(DatagramSocket socket) throws IOException, InterruptedException {
@@ -213,7 +209,7 @@ public class Client {
 				break;
 
 			case "SERVING":
-				System.out.println("Client is sending to: " + this.currentHost + this.currentPort);
+				System.out.println("Client is sending to: " + this.currentHost + " " + this.currentPort);
 				break;
 
 			case "HELP":
@@ -222,7 +218,7 @@ public class Client {
 				System.out.println("SUBJECTS");
 				System.out.println("PUBLISH");
 				System.out.println("UPDATE");
-				//System.out.println("ECHO");
+				// System.out.println("ECHO");
 				System.out.println("SERVING");
 				break;
 
@@ -306,7 +302,7 @@ public class Client {
 		if (!acquired) {
 			System.out.println("Server has failed to respond please retry or reconnect.");
 		}
-		if (!registered) {
+		if (!registered && !portError) {
 			System.out.println("de-register successful");
 			startUp = true;
 			try {
@@ -315,9 +311,9 @@ public class Client {
 
 			}
 		}
-		
+
 		if (portError) {
-			System.out.println("portError resarting the client");
+			System.out.println("portError restarting the client");
 			startUp = true;
 			try {
 				portError = false;
@@ -327,7 +323,6 @@ public class Client {
 			}
 
 		}
-
 
 	}
 
@@ -404,13 +399,13 @@ public class Client {
 		}
 
 		if (clientUpdate) {
-			System.out.println("Update sucessful please continue.");
+			System.out.println("Update successful please continue.");
 			clientName = name;
 
 		}
 
 		else {
-			System.out.println("Update not sucessful please try again.");
+			System.out.println("Update not successful please try again.");
 			try {
 				service();
 			} catch (IOException e) {
@@ -516,7 +511,7 @@ public class Client {
 
 		printSem.acquire();
 		if (!publish) {
-			System.out.println("You are not registered in that interest or it does not exist, please subscribe first.");
+			System.out.println("You are not registered in that subject or it does not exist, please subscribe first.");
 			publish = true;
 		}
 		if (startUp) {

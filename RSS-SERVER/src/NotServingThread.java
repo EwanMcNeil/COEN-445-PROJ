@@ -36,7 +36,7 @@ public class NotServingThread extends Thread {
 		if (command.equals("UPDATE-SERVER") && splitInput.length == 3) {
 			server.updateServer(socket, splitInput);
 		} else {
-			System.out.println("Invalid command!");
+			System.out.println("Error: This is not a valid command!");
 		}
 		if (server.isServing) {
 			Thread.interrupted();

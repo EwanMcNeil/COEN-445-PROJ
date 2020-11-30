@@ -455,7 +455,7 @@ public class Client {
 		}
 
 		if (portError) {
-			System.out.println("portError resarting the client");
+			System.out.println("portError restarting the client");
 			startUp = true;
 			try {
 				portError = false;
@@ -503,7 +503,7 @@ public class Client {
 		boolean acquired = response.tryAcquire(10, TimeUnit.SECONDS);
 
 		if (portError) {
-			System.out.println("portError resarting the client");
+			System.out.println("portError restarting the client");
 			startUp = true;
 			try {
 				portError = false;
@@ -558,7 +558,7 @@ public class Client {
 		}
 
 		if (portError) {
-			System.out.println("portError resarting the client");
+			System.out.println("portError restarting the client");
 			startUp = true;
 			try {
 				portError = false;
